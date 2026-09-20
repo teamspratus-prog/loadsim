@@ -1,0 +1,3308 @@
+(function(){
+"use strict";
+
+// ── State ─────────────────────────────────────────────────────────────────────
+var C = { L:473.6, W:92.6, H:106.3, Vt:2694, Vu:2529, name:"Sea CTN 40' HC", type:"enclosed", kind:"sea" };
+var PL=48, PW=45, PH=5;
+var PALLET_TYPE="wood", PALLET_MATERIAL="wood";
+var BL=45, BW=24, BH=18, MAX_STACK=4, PAL_TIERS=1, QTY_SUT=0;
+var PART_WEIGHT=0, PART_WEIGHT_UNIT="kg";
+var MAX_PAYLOAD_KG=20200, LB_TO_KG=0.45359237;
+var LOAD_MODE="single";
+var MULTI_STRATEGY="exact";
+var MULTI_OBJECTIVE="volume";
+var ALLOW_MIXED_PALLETS=false;
+var MULTI_AUTO_STACK=true;
+var MULTI_PART_SEQ=3;
+var MULTI_PARTS=[
+  {id:"part1",name:"Part A",L:24,W:18,H:12,partsPerBox:8,partWeight:"",weightUnit:"kg",basis:"parts",target:320,palletType:"wood",maxLayersLimit:'',noPalletStack:false},
+  {id:"part2",name:"Part B",L:16,W:14,H:10,partsPerBox:20,partWeight:"",weightUnit:"kg",basis:"parts",target:200,palletType:"wood",maxLayersLimit:'',noPalletStack:false}
+];
+var ZOOM_BASE=1.12;
+var ZOOM=ZOOM_BASE;
+var VIEW_STYLE="schematic";
+var VIEW_ORIENTATION="isometric";
+var STORAGE_KEY = "gmlsContainerLoadingSimulatorStateV1";
+var THEME_KEY = "containerTheme";
+var CONTAINER_INPUT_IDS = ['cL','cW','cH','cVt','cVu'];
+var DIMENSION_INPUT_IDS = ['dPL','dPW','dPH','dBL','dBW','dBH','dBS','dPT','dQTY','dPartWeight'];
+var isLoadingSavedState = false;
+
+function byId(id){ return document.getElementById(id); }
+
+function weightToKg(value,unit){
+  var n=+value;
+  if(!Number.isFinite(n)||n<=0) return 0;
+  return unit==='lb' ? n*LB_TO_KG : n;
+}
+function formatKg(value){
+  if(!Number.isFinite(value)) return '\u2014';
+  return value.toLocaleString(undefined,{maximumFractionDigits:value<100?1:0})+' kg';
+}
+function weightFillPercent(kg){ return MAX_PAYLOAD_KG>0 ? Math.round((kg/MAX_PAYLOAD_KG)*100) : 0; }
+
+function storageGet(key){
+  try { return localStorage.getItem(key); }
+  catch(e) { return null; }
+}
+
+function storageSet(key,value){
+  try { localStorage.setItem(key,value); return true; }
+  catch(e) { return false; }
+}
+
+function storageRemove(key){
+  try { localStorage.removeItem(key); return true; }
+  catch(e) { return false; }
+}
+
+// ── Presets ───────────────────────────────────────────────────────────────────
+var PRESETS = {
+  trailer48:    { L:576,   W:99,   H:110,   Vt:3627, Vu:3400, name:"Trailer 48'", type:"enclosed", kind:"trailer" },
+  trailer53:    { L:630,   W:99,   H:110,   Vt:3969, Vu:3700, name:"Trailer 53'", type:"enclosed", kind:"trailer" },
+  sea20std:     { L:232.3, W:92.6, H:94.3,  Vt:1169, Vu:1100, name:"Sea CTN 20' STD", type:"enclosed", kind:"sea" },
+  sea40std:     { L:473.6, W:92.6, H:94.3,  Vt:2385, Vu:2250, name:"Sea CTN 40' STD", type:"enclosed", kind:"sea" },
+  sea40hc:      { L:473.6, W:92.6, H:106.3, Vt:2694, Vu:2529, name:"Sea CTN 40' HC", type:"enclosed", kind:"sea" },
+  sea45hc:      { L:533.6, W:92.6, H:106.3, Vt:3035, Vu:2850, name:"Sea CTN 45' HC", type:"enclosed", kind:"sea" },
+  flatbed48:    { L:573,   W:102,  H:100,   Vt:3378, Vu:3200, name:"Flatbed 48'", type:"flatbed", kind:"flatbed" },
+  flatbed53:    { L:636,   W:102,  H:100,   Vt:3750, Vu:3500, name:"Flatbed 53'", type:"flatbed", kind:"flatbed" },
+  intermodal53: { L:630,   W:98,   H:106.5, Vt:3791, Vu:3550, name:"Intermodal CNT 53'", type:"enclosed", kind:"intermodal" }
+};
+
+var PALLET_PRESETS = {
+  wood:        { L:48, W:45, H:5, material:"wood",    label:"Full wood pallet" },
+  halfWood:    { L:24, W:45, H:5, material:"wood",    label:"Half wood pallet" },
+  plastic:     { L:48, W:45, H:5, material:"plastic", label:"Full plastic pallet" },
+  halfPlastic: { L:24, W:45, H:5, material:"plastic", label:"Half plastic pallet" }
+};
+
+// ── Canvas ────────────────────────────────────────────────────────────────────
+var canvas = document.getElementById('c');
+var ctx = canvas.getContext('2d');
+var dark = false;
+
+function getStoredTheme(){
+  return storageGet(THEME_KEY);
+}
+
+function storeTheme(theme){
+  storageSet(THEME_KEY, theme);
+}
+
+function systemPrefersDark(){
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+
+function applyTheme(theme){
+  dark = theme === 'dark';
+  document.documentElement.setAttribute('data-theme', theme);
+  var btn = document.getElementById('themeToggle');
+  var icon = document.getElementById('themeToggleIcon');
+  var text = document.getElementById('themeToggleText');
+  if(btn) btn.setAttribute('aria-label', dark ? 'Switch to light mode' : 'Switch to dark mode');
+  if(icon) icon.textContent = dark ? '☀️' : '🌙';
+  if(text) text.textContent = dark ? 'Light mode' : 'Dark mode';
+}
+
+applyTheme(getStoredTheme() || (systemPrefersDark() ? 'dark' : 'light'));
+var ANG = Math.PI/6;
+var IX=Math.cos(ANG), IY=Math.sin(ANG), JX=-Math.cos(ANG), JY=Math.sin(ANG);
+var S=1, OX=0, OY=0;
+var PROJ_XX=IX, PROJ_XY=JX, PROJ_XZ=0, PROJ_YX=IY, PROJ_YY=JY, PROJ_YZ=-1;
+
+function updateProjectionBasis(){
+  if(VIEW_ORIENTATION==='top'){
+    PROJ_XX=1; PROJ_XY=0; PROJ_XZ=0;
+    PROJ_YX=0; PROJ_YY=1; PROJ_YZ=0;
+  } else if(VIEW_ORIENTATION==='side'){
+    PROJ_XX=1; PROJ_XY=0; PROJ_XZ=0;
+    PROJ_YX=0; PROJ_YY=0; PROJ_YZ=-1;
+  } else if(VIEW_ORIENTATION==='front'){
+    PROJ_XX=0; PROJ_XY=1; PROJ_XZ=0;
+    PROJ_YX=0; PROJ_YY=0; PROJ_YZ=-1;
+  } else if(VIEW_ORIENTATION==='rear'){
+    PROJ_XX=0; PROJ_XY=-1; PROJ_XZ=0;
+    PROJ_YX=0; PROJ_YY=0; PROJ_YZ=-1;
+  } else {
+    PROJ_XX=IX; PROJ_XY=JX; PROJ_XZ=0;
+    PROJ_YX=IY; PROJ_YY=JY; PROJ_YZ=-1;
+  }
+}
+
+function projectRaw(x,y,z){
+  return {x:x*PROJ_XX+y*PROJ_XY+z*PROJ_XZ, y:x*PROJ_YX+y*PROJ_YY+z*PROJ_YZ};
+}
+
+function pt(x,y,z){
+  var p=projectRaw(x,y,z);
+  return {x: OX+p.x*S, y: OY+p.y*S};
+}
+
+function projectedContainerBounds(){
+  // Front/rear aesthetic views include running gear below the nominal loading
+  // envelope. Include that geometry in the fit bounds so 100% zoom is a true
+  // show-everything view instead of clipping wheels/suspension vertically.
+  var zMin=0;
+  if(isAesthetic() && (VIEW_ORIENTATION==='front' || VIEW_ORIENTATION==='rear') && (isFlatbed() || equipmentKind()==='trailer')){
+    zMin=-52;
+  }
+  var corners=[[0,0,zMin],[C.L,0,zMin],[0,C.W,zMin],[C.L,C.W,zMin],[0,0,C.H],[C.L,0,C.H],[0,C.W,C.H],[C.L,C.W,C.H]];
+  var minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
+  corners.forEach(function(c){
+    var q=projectRaw(c[0],c[1],c[2]);
+    minX=Math.min(minX,q.x); maxX=Math.max(maxX,q.x);
+    minY=Math.min(minY,q.y); maxY=Math.max(maxY,q.y);
+  });
+  return {minX:minX,maxX:maxX,minY:minY,maxY:maxY,width:Math.max(.001,maxX-minX),height:Math.max(.001,maxY-minY)};
+}
+
+function baseScaleForView(REF,viewport,SCALE_PAD){
+  var b=projectedContainerBounds();
+  var availableW=Math.max(160,REF-SCALE_PAD*2);
+  if(VIEW_ORIENTATION==='isometric') return (availableW/b.width)*.88;
+  var viewportH=viewport&&viewport.clientHeight?viewport.clientHeight:520;
+  var availableH=Math.max(180,viewportH-SCALE_PAD*1.35);
+  return Math.min(availableW/b.width,availableH/b.height)*.88;
+}
+
+function viewDrawDepth(x,y,z){
+  if(VIEW_ORIENTATION==='front') return -x;
+  if(VIEW_ORIENTATION==='rear') return x;
+  if(VIEW_ORIENTATION==='side') return -y;
+  if(VIEW_ORIENTATION==='top') return z;
+  return x+y+z*.02;
+}
+
+updateProjectionBasis();
+
+function face(pts,fill,stroke,lw){
+  ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
+  for(var i=1;i<pts.length;i++) ctx.lineTo(pts[i].x,pts[i].y);
+  ctx.closePath();
+  if(fill){ctx.fillStyle=fill;ctx.fill();}
+  if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lw;ctx.stroke();}
+}
+
+function ln(a,b,col,lw,dash){
+  ctx.beginPath();
+  ctx.setLineDash(dash||[]);
+  ctx.strokeStyle=col; ctx.lineWidth=lw;
+  ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y);
+  ctx.stroke(); ctx.setLineDash([]);
+}
+
+function roundedRectPath(x,y,w,h,r){
+  ctx.beginPath();
+  if(ctx.roundRect){
+    ctx.roundRect(x,y,w,h,r);
+    return;
+  }
+  var radius = Math.min(r, Math.abs(w)/2, Math.abs(h)/2);
+  ctx.moveTo(x+radius,y);
+  ctx.lineTo(x+w-radius,y);
+  ctx.quadraticCurveTo(x+w,y,x+w,y+radius);
+  ctx.lineTo(x+w,y+h-radius);
+  ctx.quadraticCurveTo(x+w,y+h,x+w-radius,y+h);
+  ctx.lineTo(x+radius,y+h);
+  ctx.quadraticCurveTo(x,y+h,x,y+h-radius);
+  ctx.lineTo(x,y+radius);
+  ctx.quadraticCurveTo(x,y,x+radius,y);
+}
+
+function isFlatbed(){
+  return C.type === 'flatbed';
+}
+
+function inferEquipmentKind(name,type){
+  if(type==='flatbed') return 'flatbed';
+  if(/^Trailer/i.test(name||'')) return 'trailer';
+  if(/^Sea/i.test(name||'')) return 'sea';
+  if(/^Intermodal/i.test(name||'')) return 'intermodal';
+  return 'custom';
+}
+
+function equipmentKind(){
+  return C.kind || inferEquipmentKind(C.name,C.type);
+}
+
+function isAesthetic(){
+  return VIEW_STYLE === 'aesthetic';
+}
+
+function equipmentPalette(){
+  var kind=equipmentKind();
+  if(kind==='trailer'){
+    return dark
+      ? {floor:'rgba(170,174,180,.24)',side:'rgba(214,216,218,.18)',end:'rgba(225,226,226,.24)',roof:'rgba(225,226,226,.10)',edge:'#e5e5df',detail:'rgba(235,235,230,.52)',door:'#d9dad8',doorSide:'#b9bbb9',hardware:'#55585d'}
+      : {floor:'rgba(145,148,153,.22)',side:'rgba(225,226,225,.72)',end:'rgba(238,239,237,.80)',roof:'rgba(240,241,239,.40)',edge:'#4b4e54',detail:'rgba(82,86,92,.42)',door:'#ecece9',doorSide:'#c9cbc9',hardware:'#4d5055'};
+  }
+  if(kind==='sea'){
+    return dark
+      ? {floor:'rgba(54,112,148,.25)',side:'rgba(42,112,157,.34)',end:'rgba(48,126,171,.40)',roof:'rgba(69,145,184,.16)',edge:'#b9d9e8',detail:'rgba(211,235,244,.48)',door:'#317fab',doorSide:'#215e83',hardware:'#d7e1e5'}
+      : {floor:'rgba(43,112,154,.20)',side:'rgba(40,128,178,.50)',end:'rgba(51,143,193,.60)',roof:'rgba(83,158,196,.22)',edge:'#244f66',detail:'rgba(232,246,251,.58)',door:'#348fc0',doorSide:'#236789',hardware:'#e6edf0'};
+  }
+  if(kind==='intermodal'){
+    return dark
+      ? {floor:'rgba(154,112,45,.24)',side:'rgba(190,132,43,.34)',end:'rgba(208,147,50,.40)',roof:'rgba(212,157,68,.14)',edge:'#f0d9a7',detail:'rgba(255,235,190,.44)',door:'#c88a28',doorSide:'#8f601c',hardware:'#f2ead9'}
+      : {floor:'rgba(170,111,26,.20)',side:'rgba(213,145,45,.50)',end:'rgba(226,157,54,.60)',roof:'rgba(230,174,83,.20)',edge:'#684716',detail:'rgba(255,240,205,.55)',door:'#d99a38',doorSide:'#a56d20',hardware:'#f6efe0'};
+  }
+  return dark
+    ? {floor:'rgba(132,140,160,.20)',side:'rgba(133,142,166,.25)',end:'rgba(145,154,177,.30)',roof:'rgba(155,164,185,.12)',edge:'#d0d0ca',detail:'rgba(225,225,220,.42)',door:'#8a91a5',doorSide:'#656b7b',hardware:'#e2e2dd'}
+    : {floor:'rgba(125,135,165,.18)',side:'rgba(143,153,181,.34)',end:'rgba(155,164,190,.40)',roof:'rgba(170,178,199,.18)',edge:'#343740',detail:'rgba(54,58,70,.38)',door:'#9da5bb',doorSide:'#737b90',hardware:'#f1f1ec'};
+}
+
+// ── Packing optimizer ─────────────────────────────────────────────────────────
+function bestPacking(){
+  var aX=Math.floor(PL/BL), aY=Math.floor(PW/BW), aC=aX*aY;
+  var bX=Math.floor(PL/BW), bY=Math.floor(PW/BL), bC=bX*bY;
+  if(aC>=bC){
+    return { nX:aX, nY:aY, boxX:BL, boxY:BW, count:aC,
+             label: aX+" along length \u00d7 "+aY+" along width = "+aC+" boxes/layer" };
+  } else {
+    return { nX:bX, nY:bY, boxX:BW, boxY:BL, count:bC,
+             label: bX+" along length \u00d7 "+bY+" along width = "+bC+" boxes/layer" };
+  }
+}
+
+// ── Draw helpers ──────────────────────────────────────────────────────────────
+var BOX_COLORS=[
+  {top:'#D6A461',side:'#B07D3F',end:'#7C5424'},
+  {top:'#EDD3A2',side:'#CBA86D',end:'#977443'}
+];
+function palletColors(){
+  if(PALLET_MATERIAL === 'plastic'){
+    return { top:'#4F82B8', side:'#355F8C', end:'#233F5E' };
+  }
+  return { top:'#A39580', side:'#766A58', end:'#524939' };
+}
+
+function drawPallet(rx,ry,bz){
+  var x0=rx,x1=rx+PL,y0=ry,y1=ry+PW,z1=bz+PH;
+  var ek=dark?'rgba(255,255,255,0.30)':'rgba(0,0,0,0.36)', ew=0.8*S;
+  var pc=palletColors();
+  face([pt(x0,y0,z1),pt(x1,y0,z1),pt(x1,y1,z1),pt(x0,y1,z1)],pc.top,ek,ew);
+  face([pt(x0,y1,bz),pt(x1,y1,bz),pt(x1,y1,z1),pt(x0,y1,z1)],pc.side,ek,ew);
+  face([pt(x1,y0,bz),pt(x1,y1,bz),pt(x1,y1,z1),pt(x1,y0,z1)],pc.end,ek,ew);
+  if(!isAesthetic()) return;
+
+  var isPlastic=PALLET_MATERIAL === 'plastic';
+  var groove=isPlastic
+    ? (dark?'rgba(20,15,35,.72)':'rgba(48,35,78,.56)')
+    : (dark?'rgba(55,32,9,.72)':'rgba(73,43,8,.48)');
+  var grain=isPlastic
+    ? (dark?'rgba(255,255,255,.18)':'rgba(35,22,70,.28)')
+    : (dark?'rgba(255,232,185,.20)':'rgba(77,44,8,.34)');
+  var hole=isPlastic
+    ? (dark?'rgba(10,8,18,.88)':'rgba(33,25,51,.78)')
+    : (dark?'rgba(10,8,5,.86)':'rgba(42,29,12,.76)');
+  var innerEdge=dark?'rgba(255,255,255,.14)':'rgba(255,255,255,.24)';
+
+  // Top deck: wood slats or a perforated plastic grid.
+  if(isPlastic){
+    var cellsX=4,cellsY=3;
+    for(var gx=0;gx<cellsX;gx++){
+      for(var gy=0;gy<cellsY;gy++){
+        var xa=x0+PL*(gx+.22)/cellsX, xb=x0+PL*(gx+.78)/cellsX;
+        var ya=y0+PW*(gy+.24)/cellsY, yb=y0+PW*(gy+.76)/cellsY;
+        face([pt(xa,ya,z1+.05),pt(xb,ya,z1+.05),pt(xb,yb,z1+.05),pt(xa,yb,z1+.05)],hole,null);
+      }
+    }
+    for(var gx2=1;gx2<cellsX;gx2++){
+      var px=x0+PL*gx2/cellsX;
+      ln(pt(px,y0,z1+.08),pt(px,y1,z1+.08),grain,Math.max(.40,.52*S));
+    }
+    for(var gy2=1;gy2<cellsY;gy2++){
+      var py=y0+PW*gy2/cellsY;
+      ln(pt(x0,py,z1+.08),pt(x1,py,z1+.08),grain,Math.max(.40,.52*S));
+    }
+  } else {
+    var deckBoards=7;
+    for(var i=1;i<deckBoards;i++){
+      var sy=y0+(y1-y0)*i/deckBoards;
+      ln(pt(x0,sy,z1+.06),pt(x1,sy,z1+.06),groove,Math.max(.48,.62*S));
+    }
+    // Subtle wood grain prevents the pallet from looking like a solid block.
+    [0.17,0.48,0.81].forEach(function(t){
+      var gy=y0+(y1-y0)*t;
+      ln(pt(x0+PL*.06,gy,z1+.09),pt(x1-PL*.05,gy,z1+.09),grain,Math.max(.34,.42*S));
+    });
+  }
+
+  // Forklift entries on the visible long side.
+  [[.18,.39],[.61,.82]].forEach(function(r){
+    var xa=x0+PL*r[0], xb=x0+PL*r[1];
+    var za=bz+PH*.14, zb=bz+PH*.64;
+    face([pt(xa,y1+.02,za),pt(xb,y1+.02,za),pt(xb,y1+.02,zb),pt(xa,y1+.02,zb)],hole,null);
+    ln(pt(xa,y1+.03,zb),pt(xb,y1+.03,zb),innerEdge,Math.max(.34,.42*S));
+  });
+  // Forklift entries on the visible end.
+  [[.18,.39],[.61,.82]].forEach(function(r){
+    var ya=y0+PW*r[0], yb=y0+PW*r[1];
+    var za=bz+PH*.14, zb=bz+PH*.64;
+    face([pt(x1+.02,ya,za),pt(x1+.02,yb,za),pt(x1+.02,yb,zb),pt(x1+.02,ya,zb)],hole,null);
+    ln(pt(x1+.03,ya,zb),pt(x1+.03,yb,zb),innerEdge,Math.max(.34,.42*S));
+  });
+
+  // Three lower runners / support blocks visible beneath the deck.
+  [0.08,0.50,0.92].forEach(function(t){
+    var sx=x0+PL*t;
+    ln(pt(sx,y1,bz+.05),pt(sx,y1,bz+PH*.88),grain,Math.max(.52,.68*S));
+  });
+}
+
+function drawBoxShippingLabel(xFace,y0,y1,bz,boxY,boxH){
+  // A recognizable shipping / part-identification label rather than an
+  // unexplained white rectangle. Keep the geometry on the box end face so it
+  // follows the selected projection naturally.
+  var labelYOuter=y1-.12*boxY;
+  var labelYInner=y1-.54*boxY;
+  var labelZ0=bz+.22*boxH;
+  var labelZ1=bz+.58*boxH;
+  var labelFill=dark?'rgba(239,237,225,.91)':'rgba(252,249,233,.96)';
+  var labelEdge=dark?'rgba(42,46,51,.82)':'rgba(47,52,57,.72)';
+  var ink=dark?'rgba(48,52,57,.90)':'rgba(38,42,47,.88)';
+  var mutedInk=dark?'rgba(68,73,78,.72)':'rgba(65,69,74,.64)';
+  var x=xFace+.025;
+
+  face([
+    pt(x,labelYOuter,labelZ0),pt(x,labelYInner,labelZ0),
+    pt(x,labelYInner,labelZ1),pt(x,labelYOuter,labelZ1)
+  ],labelFill,labelEdge,Math.max(.42,.58*S));
+
+  // Dark header bar gives the sticker a deliberate printed-label hierarchy.
+  var headerBottom=labelZ1-(labelZ1-labelZ0)*.18;
+  face([
+    pt(x+.01,labelYOuter,headerBottom),pt(x+.01,labelYInner,headerBottom),
+    pt(x+.01,labelYInner,labelZ1),pt(x+.01,labelYOuter,labelZ1)
+  ],ink,null);
+
+  // Two short information rules, like part number / quantity fields.
+  var ruleY0=labelYOuter+(labelYInner-labelYOuter)*.10;
+  var ruleY1=labelYOuter+(labelYInner-labelYOuter)*.52;
+  var ruleY2=labelYOuter+(labelYInner-labelYOuter)*.80;
+  var infoZ1=labelZ0+(labelZ1-labelZ0)*.66;
+  var infoZ2=labelZ0+(labelZ1-labelZ0)*.54;
+  ln(pt(x+.02,ruleY0,infoZ1),pt(x+.02,ruleY2,infoZ1),mutedInk,Math.max(.34,.44*S));
+  ln(pt(x+.02,ruleY0,infoZ2),pt(x+.02,ruleY1,infoZ2),mutedInk,Math.max(.34,.44*S));
+
+  // Compact barcode block at the bottom. Uneven spacing/weights makes the
+  // label immediately read as identification paperwork even at small scale.
+  var barZ0=labelZ0+(labelZ1-labelZ0)*.10;
+  var barZ1=labelZ0+(labelZ1-labelZ0)*.38;
+  var barTs=[.08,.16,.24,.35,.43,.56,.65,.76,.84,.91];
+  var barWeights=[.42,.68,.38,.78,.46,.62,.36,.74,.44,.58];
+  barTs.forEach(function(t,i){
+    var yy=labelYOuter+(labelYInner-labelYOuter)*t;
+    ln(pt(x+.025,yy,barZ0),pt(x+.025,yy,barZ1),ink,Math.max(.28,barWeights[i]*S));
+  });
+}
+
+function drawBox(rx,ry,bz,boxX,boxY,layer){
+  var x0=rx,x1=rx+boxX,y0=ry,y1=ry+boxY,z1=bz+BH;
+  var ek=dark?'rgba(255,255,255,0.30)':'rgba(0,0,0,0.36)', ew=0.8*S;
+  var s=layer%2;
+  var bc=BOX_COLORS[s];
+  face([pt(x0,y0,z1),pt(x1,y0,z1),pt(x1,y1,z1),pt(x0,y1,z1)],bc.top,ek,ew);
+  face([pt(x0,y1,bz),pt(x1,y1,bz),pt(x1,y1,z1),pt(x0,y1,z1)],bc.side,ek,ew);
+  face([pt(x1,y0,bz),pt(x1,y1,bz),pt(x1,y1,z1),pt(x1,y0,z1)],bc.end,ek,ew);
+  if(isAesthetic()){
+    var tape=dark?'rgba(245,230,185,.72)':'rgba(255,239,188,.86)';
+    var mx=(x0+x1)/2;
+    ln(pt(mx,y0,z1+.04),pt(mx,y1,z1+.04),tape,Math.max(.65,1.05*S));
+    drawBoxShippingLabel(x1,y0,y1,bz,boxY,BH);
+  }
+}
+
+function drawFlatbedEnvelope(deckTop){
+  var vis = dark?'rgba(232,232,228,0.36)':'rgba(55,55,70,0.24)';
+  var hid = dark?'rgba(232,232,228,0.22)':'rgba(55,55,70,0.14)';
+  var envW = Math.max(1, 1.0*S);
+  var dash = [5*S, 4*S];
+
+  // Draw the full theoretical flatbed envelope as a light dashed wireframe.
+  [
+    [pt(0,C.W,deckTop), pt(0,C.W,C.H)],
+    [pt(C.L,C.W,deckTop), pt(C.L,C.W,C.H)],
+    [pt(C.L,0,deckTop), pt(C.L,0,C.H)],
+    [pt(0,C.W,C.H), pt(C.L,C.W,C.H)],
+    [pt(C.L,0,C.H), pt(C.L,C.W,C.H)]
+  ].forEach(function(ab){ln(ab[0],ab[1],vis,envW,dash);});
+
+  // Hidden/back edges stay lighter, but also dashed for visual consistency.
+  [
+    [pt(0,0,C.H), pt(C.L,0,C.H)],
+    [pt(0,0,C.H), pt(0,C.W,C.H)],
+    [pt(0,0,deckTop), pt(0,0,C.H)]
+  ].forEach(function(ab){ln(ab[0],ab[1],hid,0.9*S,dash);});
+}
+
+function lerp3(a,b,t){
+  return {x:a.x+(b.x-a.x)*t, y:a.y+(b.y-a.y)*t, z:a.z+(b.z-a.z)*t};
+}
+
+function projectedCircle(x,y,z,r,segments){
+  var points=[];
+  var count=segments||36;
+  for(var i=0;i<=count;i++){
+    var a=i*Math.PI*2/count;
+    points.push(pt(x+r*Math.cos(a),y,z+r*Math.sin(a)));
+  }
+  return points;
+}
+
+function drawProjectedWheel(x,y,z,r){
+  var tireFill = dark ? '#12161b' : '#171c22';
+  var tireEdge = dark ? '#d8dad4' : '#333943';
+  var sidewallFill = dark ? '#2a3037' : '#2b3138';
+  var sidewallEdge = dark ? '#616872' : '#15191e';
+  var rimFill = dark ? '#c7cbd0' : '#c3c8cd';
+  var rimEdge = dark ? '#f0f1eb' : '#5e6670';
+  var hubFill = dark ? '#767d85' : '#747b83';
+  var lugFill = dark ? '#555d66' : '#4b535c';
+  var thickness = 8.5;
+
+  ctx.save();
+
+  // Small ground shadow.
+  var c = pt(x,y,z);
+  ctx.beginPath();
+  ctx.ellipse(c.x + 1.4*S, c.y + r*S*.82, r*S*.74, r*S*.20, 0, 0, Math.PI*2);
+  ctx.fillStyle = dark ? 'rgba(0,0,0,.18)' : 'rgba(0,0,0,.12)';
+  ctx.fill();
+
+  // Same-radius front and back faces so the tire keeps a constant radius everywhere.
+  var frontOuter = projectedCircle(x,y,z,r,56);
+  var backOuter  = projectedCircle(x,y-thickness,z,r,56);
+
+  // Continuous tire thickness, pushed inward under the trailer.
+  for(var i=0;i<frontOuter.length-1;i++){
+    face([frontOuter[i], frontOuter[i+1], backOuter[i+1], backOuter[i]], '#0d1014', null);
+  }
+
+  // Back tire face sits inward, not outward.
+  face(backOuter, '#0b0d10', null, Math.max(.85,1.05*S));
+
+  // Front face remains the visible outer face of the wheel.
+  face(frontOuter, tireFill, tireEdge, Math.max(1.0,1.25*S));
+  face(projectedCircle(x,y,z,r*.80,48), sidewallFill, sidewallEdge, Math.max(.48,.62*S));
+  face(projectedCircle(x,y,z,r*.53,40), rimFill, rimEdge, Math.max(.62,.80*S));
+  face(projectedCircle(x,y,z,r*.21,28), hubFill, dark ? '#e7e8e2' : '#40474f', Math.max(.40,.52*S));
+
+  // Five lug nuts.
+  for(var k=0;k<5;k++){
+    var a = -Math.PI/2 + k*Math.PI*2/5;
+    face(projectedCircle(x + r*.31*Math.cos(a), y, z + r*.31*Math.sin(a), r*.038, 12), lugFill, null);
+  }
+
+  ctx.restore();
+}
+
+function drawProjectedFender(x,y,z,r){
+  var pts=[];
+  for(var i=0;i<=18;i++){
+    var a=Math.PI-i*Math.PI/18;
+    pts.push(pt(x+r*Math.cos(a),y,z+r*Math.sin(a)));
+  }
+  for(var j=1;j<pts.length;j++){
+    ln(pts[j-1],pts[j],dark?'rgba(210,212,210,.78)':'rgba(63,67,73,.72)',Math.max(.85,1.05*S));
+  }
+}
+
+
+function drawFlatbedEndOnRunningGear(axleX,wheelZ,wheelR,axleOuter,axleInner,axleHighlight){
+  // Front/rear orthographic views look along the trailer length. In that
+  // projection, a normal sidewall circle collapses to a line, so render the
+  // tire tread end-on instead: one tire at each side with a continuous axle.
+  var W=C.W;
+  var tireWidth=Math.min(12,Math.max(8,W*.10));
+  var z0=wheelZ-wheelR, z1=wheelZ+wheelR;
+  var leftOuterY=0, leftInnerY=tireWidth;
+  var rightInnerY=W-tireWidth, rightOuterY=W;
+  var tireFill=dark?'#12161b':'#171c22';
+  var tireEdge=dark?'#d8dad4':'#333943';
+  var suspension=dark?'rgba(188,194,198,.82)':'rgba(58,64,70,.88)';
+  var bracketFill=dark?'rgba(78,84,91,.98)':'rgba(78,84,91,.96)';
+  var bracketEdge=dark?'rgba(218,221,218,.72)':'rgba(41,46,52,.86)';
+  var frameUndersideZ=-8;
+
+  // Suspension / hanger geometry ties the axle visibly into the trailer frame.
+  // Each side has an under-frame bracket and two links down to the axle beam.
+  function suspensionSide(innerY,dir){
+    var mountY=innerY + dir*Math.max(5,W*.055);
+    var axleY=innerY + dir*Math.max(2.5,W*.022);
+    var bracketHalf=Math.max(2.8,W*.028);
+    var bracketBottom=frameUndersideZ-5.5;
+
+    face([
+      pt(axleX,mountY-bracketHalf,frameUndersideZ),
+      pt(axleX,mountY+bracketHalf,frameUndersideZ),
+      pt(axleX,mountY+bracketHalf,bracketBottom),
+      pt(axleX,mountY-bracketHalf,bracketBottom)
+    ],bracketFill,bracketEdge,Math.max(.65,.82*S));
+
+    ln(pt(axleX,mountY-bracketHalf*.55,bracketBottom),pt(axleX,axleY,wheelZ+5.5),suspension,Math.max(1.15,1.42*S));
+    ln(pt(axleX,mountY+bracketHalf*.55,bracketBottom),pt(axleX,axleY,wheelZ+5.5),suspension,Math.max(1.15,1.42*S));
+
+    // Short vertical damper / air-spring cue between frame and axle.
+    ln(pt(axleX,mountY,bracketBottom-1),pt(axleX,axleY,wheelZ+8.5),axleInner,Math.max(2.0,2.45*S));
+    ln(pt(axleX,mountY,bracketBottom-1),pt(axleX,axleY,wheelZ+8.5),axleHighlight,Math.max(.48,.62*S));
+  }
+
+  suspensionSide(leftInnerY,1);
+  suspensionSide(rightInnerY,-1);
+
+  // Axle runs continuously from the inside face of one tire to the other.
+  ln(pt(axleX,leftInnerY,wheelZ),pt(axleX,rightInnerY,wheelZ),axleOuter,Math.max(5.6,6.8*S));
+  ln(pt(axleX,leftInnerY,wheelZ),pt(axleX,rightInnerY,wheelZ),axleInner,Math.max(3.2,4.0*S));
+  ln(pt(axleX,leftInnerY,wheelZ+1.4),pt(axleX,rightInnerY,wheelZ+1.4),axleHighlight,Math.max(.55,.72*S));
+
+  // Compact center housing gives the axle a more realistic mechanical read.
+  var housingHalf=Math.max(5.0,W*.055);
+  var cy=W*.5;
+  face([
+    pt(axleX,cy-housingHalf,wheelZ-5.0),
+    pt(axleX,cy+housingHalf,wheelZ-5.0),
+    pt(axleX,cy+housingHalf,wheelZ+5.0),
+    pt(axleX,cy-housingHalf,wheelZ+5.0)
+  ],axleInner,axleOuter,Math.max(.7,.9*S));
+  ln(pt(axleX,cy-housingHalf*.65,wheelZ+1.1),pt(axleX,cy+housingHalf*.65,wheelZ+1.1),axleHighlight,Math.max(.45,.58*S));
+
+  function tireBlock(y0,y1){
+    // Clean solid end-on tire silhouette. No tread stripes: they looked like
+    // grey lines passing through the tire in orthographic end views.
+    face([pt(axleX,y0,z0),pt(axleX,y1,z0),pt(axleX,y1,z1),pt(axleX,y0,z1)],tireFill,tireEdge,Math.max(1.0,1.2*S));
+  }
+
+  // Outermost tire faces align exactly with the trailer sides (y=0 and y=W).
+  tireBlock(leftOuterY,leftInnerY);
+  tireBlock(rightInnerY,rightOuterY);
+}
+
+function drawFlatbedAestheticDetails(deckTop){
+  // In a true top view, the flatbed deck occludes all running gear beneath it.
+  // Skip the aesthetic undercarriage entirely so wheels/axles cannot show through the floor.
+  if(VIEW_ORIENTATION==='top') return;
+
+  var L=C.L,W=C.W;
+  var frameTop=0, frameBottom=-10;
+  var frameFill=dark?'rgba(47,51,57,.96)':'rgba(56,61,67,.94)';
+  var edge=dark?'#c8cbc9':'#30343a';
+  var detail=dark?'rgba(230,230,225,.68)':'rgba(53,57,63,.60)';
+  var reflective=dark?'rgba(255,225,112,.82)':'rgba(230,178,30,.90)';
+  var support=dark?'rgba(205,208,206,.72)':'rgba(52,57,64,.78)';
+  var axleOuter=dark?'rgba(12,15,19,.98)':'rgba(25,29,34,.98)';
+  var axleInner=dark?'rgba(105,112,120,.96)':'rgba(73,80,88,.96)';
+  var axleHighlight=dark?'rgba(205,210,214,.36)':'rgba(190,196,201,.30)';
+  var mudFlap=dark?'rgba(18,20,24,.95)':'rgba(22,25,30,.95)';
+
+  // Main side rail and lower structural beam.
+  // Extend them to the visible front corner, and add wrap pieces on the front and rear faces
+  // so the dark-grey side panel reads as continuing around the trailer.
+  face([pt(0,W,frameBottom),pt(L,W,frameBottom),pt(L,W,frameTop),pt(0,W,frameTop)],frameFill,edge,.9*S);
+  ln(pt(0,W,-5),pt(L,W,-5),dark?'rgba(180,184,188,.48)':'rgba(25,28,32,.42)',Math.max(.75,.92*S));
+  // Rear/end wrap stays visible.
+  face([pt(L,0,frameBottom),pt(L,W,frameBottom),pt(L,W,frameTop),pt(L,0,frameTop)],frameFill,edge,.82*S);
+  ln(pt(L,0,-5),pt(L,W,-5),dark?'rgba(180,184,188,.40)':'rgba(25,28,32,.36)',Math.max(.68,.84*S));
+
+  // Reflective conspicuity tape.
+  for(var tx=L*.04;tx<L*.985;tx+=Math.max(42,L/11)){
+    ln(pt(tx,W,-2.0),pt(Math.min(tx+18,L),W,-2.0),reflective,Math.max(1.25,1.55*S));
+  }
+  // Rear conspicuity tape wraps across the trailer end, but avoids the red lights.
+  [[W*.02,W*.10],[W*.24,W*.46],[W*.54,W*.76],[W*.90,W*.98]].forEach(function(seg){
+    ln(pt(L,seg[0],-2.0),pt(L,seg[1],-2.0),reflective,Math.max(1.15,1.45*S));
+  });
+
+  // Rear lights only.
+  var lightRed=dark?'#ff6a63':'#b71919';
+  face([pt(L,W*.12,-2),pt(L,W*.22,-2),pt(L,W*.22,1),pt(L,W*.12,1)],lightRed,null);
+  face([pt(L,W*.78,-2),pt(L,W*.88,-2),pt(L,W*.88,1),pt(L,W*.78,1)],lightRed,null);
+
+  // Wheel package: lowered slightly so the running gear reads better from the camera,
+  // while still staying tucked under the flatbed.
+  var axleXs=[L*.75,L*.84];
+  var wheelY=W-5;
+  var wheelZ=-32;
+  var wheelR=18;
+
+  if(VIEW_ORIENTATION==='front' || VIEW_ORIENTATION==='rear'){
+    // Looking along the trailer length, the tandem axles sit directly behind one
+    // another. Draw the cross-trailer geometry once so both left/right tires
+    // are visible and the axle truly connects them.
+    var endAxleX=VIEW_ORIENTATION==='front'?axleXs[0]:axleXs[1];
+    drawFlatbedEndOnRunningGear(endAxleX,wheelZ,wheelR,axleOuter,axleInner,axleHighlight);
+  } else {
+    // Suspension links and short visible axle sections behind each wheel.
+    // Keep the axle segments near the camera-side wheels so they do not appear
+    // to pass visibly through the trailer deck/body.
+    ln(pt(axleXs[0],wheelY-3,wheelZ+7),pt(axleXs[1],wheelY-3,wheelZ+7),support,Math.max(1.1,1.35*S));
+    axleXs.forEach(function(ax){
+      ln(pt(ax-7,W,-8),pt(ax,wheelY-3,wheelZ+10),support,Math.max(.95,1.15*S));
+      ln(pt(ax+7,W,-8),pt(ax,wheelY-3,wheelZ+10),support,Math.max(.95,1.15*S));
+
+      // Only show the visible portion of the axle close to the near-side wheel.
+      // The wheel is drawn afterwards, so it naturally hides the outer end.
+      var axleStartY=W*.68;
+      var axleEndY=wheelY-8.5;
+      ln(pt(ax,axleStartY,wheelZ),pt(ax,axleEndY,wheelZ),axleOuter,Math.max(5.2,6.4*S));
+      ln(pt(ax,axleStartY,wheelZ),pt(ax,axleEndY,wheelZ),axleInner,Math.max(3.1,3.9*S));
+      ln(pt(ax,axleStartY,wheelZ+1.4),pt(ax,axleEndY,wheelZ+1.4),axleHighlight,Math.max(.55,.72*S));
+
+      // Compact inboard housing gives the axle a more mechanical, supported appearance.
+      face(projectedCircle(ax,W*.70,wheelZ,5.2,24),axleInner,axleOuter,Math.max(.65,.82*S));
+      face(projectedCircle(ax,W*.70,wheelZ,2.2,18),axleOuter,null);
+    });
+
+    // Flatbed-style mudflaps behind the visible wheels.
+    axleXs.forEach(function(ax){
+      // Small hanger / bracket tucked just behind the tire.
+      ln(pt(ax+6,wheelY-1,-8),pt(ax+9,wheelY-1,-12),support,Math.max(.85,1.05*S));
+      // Main flap panel.
+      face([
+        pt(ax+9,wheelY-1,-10),
+        pt(ax+18,wheelY-1,-10),
+        pt(ax+18,wheelY-1,-33),
+        pt(ax+9,wheelY-1,-33)
+      ], mudFlap, edge, .5*S);
+      // Bottom lip to make the flap read a bit more like a hanging rubber panel.
+      ln(pt(ax+10,wheelY-1,-33),pt(ax+17,wheelY-1,-33),dark?'rgba(230,230,225,.22)':'rgba(210,210,210,.10)',Math.max(.55,.7*S));
+    });
+
+    // Wheels themselves.
+    axleXs.forEach(function(ax){ drawProjectedWheel(ax,wheelY,wheelZ,wheelR); });
+  }
+
+  // Re-draw the visible side rail / underframe in the foreground so the upper part
+  // of the wheel is correctly occluded by the trailer body.
+  face([pt(0,W,frameBottom),pt(L,W,frameBottom),pt(L,W,frameTop),pt(0,W,frameTop)],frameFill,edge,.9*S);
+  ln(pt(0,W,-5),pt(L,W,-5),dark?'rgba(180,184,188,.48)':'rgba(25,28,32,.42)',Math.max(.75,.92*S));
+  for(var otx=L*.04;otx<L*.985;otx+=Math.max(42,L/11)){
+    ln(pt(otx,W,-2.0),pt(Math.min(otx+18,L),W,-2.0),reflective,Math.max(1.25,1.55*S));
+  }
+}
+
+
+function drawTrailerAestheticDetails(){
+  var L=C.L,W=C.W,H=C.H;
+  var frameTop=0, frameBottom=-12;
+  var railFill=dark?'rgba(47,51,57,.97)':'rgba(56,61,67,.95)';
+  var railEdge=dark?'#c8cbc9':'#30343a';
+  var railHighlight=dark?'rgba(180,184,188,.48)':'rgba(25,28,32,.42)';
+  var reflective=dark?'rgba(255,225,112,.84)':'rgba(230,178,30,.92)';
+  var support=dark?'rgba(205,208,206,.72)':'rgba(52,57,64,.78)';
+  var axleOuter=dark?'rgba(12,15,19,.98)':'rgba(25,29,34,.98)';
+  var axleInner=dark?'rgba(105,112,120,.96)':'rgba(73,80,88,.96)';
+  var axleHighlight=dark?'rgba(205,210,214,.36)':'rgba(190,196,201,.30)';
+  var mudFlap=dark?'rgba(18,20,24,.95)':'rgba(22,25,30,.95)';
+  var lightRed=dark?'#ff6a63':'#b71919';
+
+  // Main lower side skirt / rail on the visible long side.
+  face([pt(0,W,frameBottom),pt(L,W,frameBottom),pt(L,W,frameTop),pt(0,W,frameTop)],railFill,railEdge,.9*S);
+  ln(pt(0,W,-5),pt(L,W,-5),railHighlight,Math.max(.75,.92*S));
+
+  // Wrap the darker lower rail across the rear end so the bottom treatment continues.
+  face([pt(L,0,frameBottom),pt(L,W,frameBottom),pt(L,W,frameTop),pt(L,0,frameTop)],railFill,railEdge,.82*S);
+  ln(pt(L,0,-5),pt(L,W,-5),dark?'rgba(180,184,188,.40)':'rgba(25,28,32,.36)',Math.max(.68,.84*S));
+
+  // Yellow conspicuity tape along the visible side.
+  for(var tx=L*.06;tx<L*.965;tx+=Math.max(42,L/11)){
+    ln(pt(tx,W,-2.0),pt(Math.min(tx+18,L),W,-2.0),reflective,Math.max(1.25,1.55*S));
+  }
+
+  // Rear tape wraps across the trailer end but avoids the rear lights.
+  [[W*.02,W*.10],[W*.24,W*.46],[W*.54,W*.76],[W*.90,W*.98]].forEach(function(seg){
+    ln(pt(L,seg[0],-2.0),pt(L,seg[1],-2.0),reflective,Math.max(1.15,1.45*S));
+  });
+
+  // Rear lights.
+  face([pt(L,W*.12,-2),pt(L,W*.22,-2),pt(L,W*.22,1),pt(L,W*.12,1)],lightRed,null);
+  face([pt(L,W*.78,-2),pt(L,W*.88,-2),pt(L,W*.88,1),pt(L,W*.78,1)],lightRed,null);
+
+  // Tandem axle package.
+  var axleXs=[L*.75,L*.84];
+  var wheelY=W-5;
+  var wheelZ=-32;
+  var wheelR=18;
+
+  // Suspension links and short visible axle sections behind each wheel.
+  ln(pt(axleXs[0],wheelY-3,wheelZ+7),pt(axleXs[1],wheelY-3,wheelZ+7),support,Math.max(1.1,1.35*S));
+  axleXs.forEach(function(ax){
+    ln(pt(ax-7,W,-8),pt(ax,wheelY-3,wheelZ+10),support,Math.max(.95,1.15*S));
+    ln(pt(ax+7,W,-8),pt(ax,wheelY-3,wheelZ+10),support,Math.max(.95,1.15*S));
+
+    // Keep the visible axle details tucked closer to the near-side wheels so they do not
+    // peek through the trailer floor in the isometric view.
+    var axleStartY=W*.80;
+    var axleEndY=wheelY-8.5;
+    ln(pt(ax,axleStartY,wheelZ),pt(ax,axleEndY,wheelZ),axleOuter,Math.max(5.2,6.4*S));
+    ln(pt(ax,axleStartY,wheelZ),pt(ax,axleEndY,wheelZ),axleInner,Math.max(3.1,3.9*S));
+    ln(pt(ax,axleStartY,wheelZ+1.4),pt(ax,axleEndY,wheelZ+1.4),axleHighlight,Math.max(.55,.72*S));
+    face(projectedCircle(ax,W*.82,wheelZ,4.5,24),axleInner,axleOuter,Math.max(.60,.76*S));
+    face(projectedCircle(ax,W*.82,wheelZ,1.9,18),axleOuter,null);
+  });
+
+  // Mudflaps behind the visible wheels.
+  axleXs.forEach(function(ax){
+    ln(pt(ax+6,wheelY-1,-8),pt(ax+9,wheelY-1,-12),support,Math.max(.85,1.05*S));
+    face([
+      pt(ax+9,wheelY-1,-10),
+      pt(ax+18,wheelY-1,-10),
+      pt(ax+18,wheelY-1,-33),
+      pt(ax+9,wheelY-1,-33)
+    ], mudFlap, railEdge, .5*S);
+    ln(pt(ax+10,wheelY-1,-33),pt(ax+17,wheelY-1,-33),dark?'rgba(230,230,225,.22)':'rgba(210,210,210,.10)',Math.max(.55,.7*S));
+  });
+
+  // Wheels themselves.
+  axleXs.forEach(function(ax){ drawProjectedWheel(ax,wheelY,wheelZ,wheelR); });
+
+  // Re-draw the visible long rail in the foreground so the wheels tuck under the trailer body.
+  face([pt(0,W,frameBottom),pt(L,W,frameBottom),pt(L,W,frameTop),pt(0,W,frameTop)],railFill,railEdge,.9*S);
+  ln(pt(0,W,-5),pt(L,W,-5),railHighlight,Math.max(.75,.92*S));
+  for(var otx=L*.06;otx<L*.965;otx+=Math.max(42,L/11)){
+    ln(pt(otx,W,-2.0),pt(Math.min(otx+18,L),W,-2.0),reflective,Math.max(1.25,1.55*S));
+  }
+}
+
+function drawAestheticEnclosedBack(){
+  var L=C.L,W=C.W,H=C.H;
+  var p=equipmentPalette();
+  var edgeW=Math.max(1.1,1.45*S);
+  face([pt(0,0,0),pt(L,0,0),pt(L,W,0),pt(0,W,0)],p.floor,null);
+  face([pt(0,0,0),pt(L,0,0),pt(L,0,H),pt(0,0,H)],p.side,p.edge,.8*S);
+  face([pt(0,0,0),pt(0,W,0),pt(0,W,H),pt(0,0,H)],p.end,p.edge,.8*S);
+  face([pt(0,0,H),pt(L,0,H),pt(L,W,H),pt(0,W,H)],p.roof,null);
+
+  var kind=equipmentKind();
+  // Corrugation belongs on sea/intermodal containers. Trailers use smooth skins,
+  // so only the structural perimeter remains visible and no grid is drawn.
+  if(kind!=='trailer'){
+    var spacing=kind==='sea' ? 13 : (kind==='intermodal' ? 16 : 36);
+    for(var x=spacing;x<L;x+=spacing){
+      ln(pt(x,0,2),pt(x,0,H-2),p.detail,Math.max(.45,.8*S));
+    }
+    var endSpacing=Math.max(12,W/7);
+    for(var y=endSpacing;y<W;y+=endSpacing){
+      ln(pt(0,y,2),pt(0,y,H-2),p.detail,Math.max(.45,.7*S));
+    }
+    ln(pt(0,0,H*.12),pt(L,0,H*.12),p.detail,Math.max(.45,.65*S));
+    ln(pt(0,0,H*.88),pt(L,0,H*.88),p.detail,Math.max(.45,.65*S));
+  }
+  [[pt(0,0,0),pt(0,0,H)],[pt(L,0,0),pt(L,0,H)],[pt(0,W,0),pt(0,W,H)]]
+    .forEach(function(ab){ln(ab[0],ab[1],p.edge,edgeW);});
+
+  if(kind==='trailer') drawTrailerAestheticDetails();
+}
+
+function drawDoorPanel(hingeY,direction,kind){
+  var L=C.L,W=C.W,H=C.H;
+  var doorW=W/2;
+  var angleDeg=kind==='trailer' ? (direction<0 ? 38 : 56) : (kind==='sea' ? 58 : 50);
+  var angle=angleDeg*Math.PI/180;
+  var z0=2, z1=H-2;
+  var A={x:L,y:hingeY,z:z0};
+  var B={x:L+doorW*Math.sin(angle),y:hingeY+direction*doorW*Math.cos(angle),z:z0};
+  var Cc={x:B.x,y:B.y,z:z1};
+  var D={x:L,y:hingeY,z:z1};
+  var p=equipmentPalette();
+  face([pt(A.x,A.y,A.z),pt(B.x,B.y,B.z),pt(Cc.x,Cc.y,Cc.z),pt(D.x,D.y,D.z)],p.door,p.edge,Math.max(1,1.15*S));
+
+  var seamCount=kind==='trailer' ? 3 : 5;
+  for(var i=1;i<seamCount;i++){
+    var t=i/seamCount;
+    var h1=lerp3(A,D,t), h2=lerp3(B,Cc,t);
+    ln(pt(h1.x,h1.y,h1.z),pt(h2.x,h2.y,h2.z),p.doorSide,Math.max(.45,.62*S));
+  }
+
+  if(kind==='sea' || kind==='intermodal'){
+    [0.30,0.67].forEach(function(t){
+      var vb=lerp3(A,B,t), vt=lerp3(D,Cc,t);
+      ln(pt(vb.x,vb.y,vb.z+4),pt(vt.x,vt.y,vt.z-4),p.hardware,Math.max(.85,1.05*S));
+    });
+    [0.18,0.50,0.82].forEach(function(t){
+      var hb=lerp3(A,D,t);
+      var ho=lerp3(B,Cc,t);
+      var hStart=lerp3(hb,ho,.04), hEnd=lerp3(hb,ho,.24);
+      ln(pt(hStart.x,hStart.y,hStart.z),pt(hEnd.x,hEnd.y,hEnd.z),p.hardware,Math.max(.8,.95*S));
+    });
+  } else {
+    var handleA=lerp3(A,D,.46), handleB=lerp3(B,Cc,.46);
+    var hs=lerp3(handleA,handleB,.55), he=lerp3(handleA,handleB,.82);
+    ln(pt(hs.x,hs.y,hs.z),pt(he.x,he.y,he.z),p.hardware,Math.max(1,1.3*S));
+  }
+}
+
+function drawAestheticRearDetails(){
+  if(!isAesthetic() || isFlatbed()) return;
+  // Keep the dedicated Rear orthographic view clean. The open door geometry is
+  // useful in isometric/adjacent views, but without a depth buffer it can read
+  // as if the far-end doors were pasted on top of the rear elevation.
+  if(VIEW_ORIENTATION==='rear') return;
+  var kind=equipmentKind();
+  drawDoorPanel(0,-1,kind);
+  drawDoorPanel(C.W,1,kind);
+}
+
+function drawContainerBack(){
+  var L=C.L,W=C.W,H=C.H;
+  var ce=dark?'#C7D3DD':'#1D3247', cd=dark?'rgba(210,210,205,0.45)':'rgba(55,55,70,0.55)', lw=1.6*S;
+
+  if(isFlatbed()){
+    var deckTop = Math.min(4, Math.max(2, PH*0.8));
+    var floorFill = isAesthetic() ? (dark?'rgba(125,132,144,.22)':'rgba(102,108,119,.20)') : (dark?'rgba(160,170,200,0.16)':'rgba(120,130,155,0.18)');
+    var deckTopFill = isAesthetic() ? (dark?'rgba(120,124,132,.78)':'rgba(119,123,129,.70)') : (dark?'rgba(135,135,145,0.44)':'rgba(100,100,115,0.24)');
+    var deckSideFill = isAesthetic() ? (dark?'rgba(66,70,78,.88)':'rgba(71,75,82,.82)') : (dark?'rgba(95,95,105,0.56)':'rgba(85,85,100,0.38)');
+    // Smaller, more readable front bulkhead / headache rack.
+    var rackTop = deckTop + Math.min(Math.max(H*0.12, 10), 16);
+    var bulkY0 = 0, bulkY1 = W;
+    var bulkheadFill = isAesthetic() ? (dark?'rgba(78,83,90,.96)':'rgba(84,88,95,.92)') : deckSideFill;
+    var bulkheadEdge = dark ? 'rgba(218,220,216,.72)' : 'rgba(42,46,52,.85)';
+    var bulkheadHighlight = dark ? 'rgba(238,240,235,.30)' : 'rgba(236,239,242,.38)';
+
+    // Flatbeds are open decks: no roof/enclosure. Height and width are shown by the external dimension annotations.
+    face([pt(0,0,0),pt(L,0,0),pt(L,W,0),pt(0,W,0)], floorFill, null);
+    face([pt(0,0,deckTop),pt(L,0,deckTop),pt(L,W,deckTop),pt(0,W,deckTop)], deckTopFill, ce, 1.1*S);
+    face([pt(0,W,0),pt(L,W,0),pt(L,W,deckTop),pt(0,W,deckTop)], deckSideFill, ce, 0.9*S);
+    face([pt(L,0,0),pt(L,W,0),pt(L,W,deckTop),pt(L,0,deckTop)], deckSideFill, ce, 0.9*S);
+
+    // Filled front bulkhead, matching the flatbed body and drawn behind the load.
+    // In rear view it should still read clearly as the far-end wall, so give it
+    // a distinct frame and slightly inset uprights.
+    face([pt(0,bulkY0,deckTop),pt(0,bulkY1,deckTop),pt(0,bulkY1,rackTop),pt(0,bulkY0,rackTop)], bulkheadFill, bulkheadEdge, Math.max(0.95,1.05*S));
+    ln(pt(0,bulkY0,deckTop),pt(0,bulkY0,rackTop),bulkheadEdge,Math.max(1.0,1.15*S));
+    ln(pt(0,bulkY1,deckTop),pt(0,bulkY1,rackTop),bulkheadEdge,Math.max(1.0,1.15*S));
+    ln(pt(0,bulkY0,rackTop),pt(0,bulkY1,rackTop),bulkheadEdge,Math.max(1.15,1.3*S));
+    ln(pt(0,bulkY0,rackTop-1.1),pt(0,bulkY1,rackTop-1.1),bulkheadHighlight,Math.max(.48,.62*S));
+
+    [[pt(0,0,deckTop),pt(L,0,deckTop)],[pt(0,0,deckTop),pt(0,W,deckTop)],[pt(0,W,deckTop),pt(L,W,deckTop)],[pt(L,0,deckTop),pt(L,W,deckTop)]]
+      .forEach(function(ab){ln(ab[0],ab[1],ce,lw);});
+    if(isAesthetic()) drawFlatbedAestheticDetails(deckTop);
+
+    return;
+  }
+
+  if(isAesthetic()){
+    drawAestheticEnclosedBack();
+    return;
+  }
+
+  var cf=dark?'rgba(130,130,160,0.14)':'rgba(125,135,165,0.15)';
+  face([pt(0,0,0),pt(L,0,0),pt(L,W,0),pt(0,W,0)],cf,null);
+  face([pt(0,0,0),pt(L,0,0),pt(L,0,H),pt(0,0,H)],cf,null);
+  face([pt(0,0,0),pt(0,W,0),pt(0,W,H),pt(0,0,H)],cf,null);
+  [[pt(0,0,0),pt(L,0,0)],[pt(0,0,0),pt(0,W,0)],[pt(0,0,0),pt(0,0,H)],
+   [pt(L,0,0),pt(L,0,H)],[pt(0,W,0),pt(0,W,H)],[pt(0,0,H),pt(L,0,H)],[pt(0,0,H),pt(0,W,H)]
+  ].forEach(function(ab){ln(ab[0],ab[1],ce,lw);});
+  [[pt(L,W,0),pt(0,W,0)],[pt(L,W,0),pt(L,0,0)],[pt(L,W,H),pt(0,W,H)],[pt(L,W,H),pt(L,0,H)]
+  ].forEach(function(ab){ln(ab[0],ab[1],cd,0.8*S,[4*S,4*S]);});
+}
+
+function drawContainerFront(){
+  var L=C.L,W=C.W,H=C.H,ce=dark?'#C7D3DD':'#1D3247',lw=1.6*S;
+
+  if(isFlatbed()){
+    var deckTop = Math.min(4, Math.max(2, PH*0.8));
+
+    // Visible front deck edges.
+    [[pt(L,0,deckTop),pt(L,W,deckTop)],[pt(0,W,deckTop),pt(L,W,deckTop)]]
+      .forEach(function(ab){ln(ab[0],ab[1],ce,lw);});
+
+    drawFlatbedEnvelope(deckTop);
+
+    // In the dedicated Rear view, the front bulkhead / headache rack should read
+    // as the near wall, so redraw it in the foreground to occlude the load.
+    if(isAesthetic() && VIEW_ORIENTATION==='rear'){
+      var rackTop = deckTop + Math.min(Math.max(H*0.12, 10), 16);
+      var bulkY0 = 0, bulkY1 = W;
+      var bulkheadFill = dark ? 'rgba(78,83,90,.98)' : 'rgba(84,88,95,.96)';
+      var bulkheadEdge = dark ? 'rgba(218,220,216,.78)' : 'rgba(42,46,52,.92)';
+      var bulkheadHighlight = dark ? 'rgba(238,240,235,.34)' : 'rgba(236,239,242,.42)';
+      face([pt(0,bulkY0,deckTop),pt(0,bulkY1,deckTop),pt(0,bulkY1,rackTop),pt(0,bulkY0,rackTop)], bulkheadFill, bulkheadEdge, Math.max(1.0,1.15*S));
+      ln(pt(0,bulkY0,deckTop),pt(0,bulkY0,rackTop),bulkheadEdge,Math.max(1.05,1.2*S));
+      ln(pt(0,bulkY1,deckTop),pt(0,bulkY1,rackTop),bulkheadEdge,Math.max(1.05,1.2*S));
+      ln(pt(0,bulkY0,rackTop),pt(0,bulkY1,rackTop),bulkheadEdge,Math.max(1.2,1.35*S));
+      ln(pt(0,bulkY0,rackTop-1.1),pt(0,bulkY1,rackTop-1.1),bulkheadHighlight,Math.max(.5,.65*S));
+    }
+    return;
+  }
+
+  [[pt(L,0,0),pt(L,W,0)],[pt(0,W,0),pt(L,W,0)],[pt(L,0,0),pt(L,0,H)],
+   [pt(L,W,0),pt(L,W,H)],[pt(0,W,0),pt(0,W,H)],[pt(L,0,H),pt(L,W,H)],[pt(0,W,H),pt(L,W,H)]
+  ].forEach(function(ab){ln(ab[0],ab[1],ce,lw);});
+  drawAestheticRearDetails();
+}
+
+// ── Layout calculator ─────────────────────────────────────────────────────────
+function calcLayout(){
+  var pack = bestPacking();
+  var requestedStack = Math.max(1, Math.floor(MAX_STACK));
+  var requestedTiers = Math.max(1, Math.floor(PAL_TIERS));
+
+  var maxLayersForRequestedTiers = Math.floor((C.H / requestedTiers - PH) / BH);
+  maxLayersForRequestedTiers = Math.max(0, maxLayersForRequestedTiers);
+  var actualStack = Math.max(0, Math.min(requestedStack, maxLayersForRequestedTiers));
+
+  var actualUnitH = PH + actualStack*BH;
+  var maxTiersForActualUnit = actualUnitH > 0 ? Math.floor(C.H / actualUnitH) : 0;
+  maxTiersForActualUnit = Math.max(0, maxTiersForActualUnit);
+  var actualTiers = Math.max(0, Math.min(requestedTiers, maxTiersForActualUnit));
+
+  var palCols = Math.floor(C.W/PW);
+  var maxRows = Math.floor(C.L/PL);
+  palCols = Math.max(0, palCols);
+  maxRows = Math.max(0, maxRows);
+
+  var palletFitsFootprint = palCols > 0 && maxRows > 0;
+  var boxFitsFootprint = pack.count > 0;
+  var oneLoadedPalletFitsHeight = (PH + BH) <= C.H;
+
+  return {
+    pack: pack,
+    REQUESTED_STACK: requestedStack,
+    REQUESTED_TIERS: requestedTiers,
+    MAX_LAYERS_FOR_REQUESTED_TIERS: maxLayersForRequestedTiers,
+    MAX_TIERS_FOR_ACTUAL_UNIT: maxTiersForActualUnit,
+    ACTUAL_STACK: actualStack,
+    ACTUAL_TIERS: actualTiers,
+    UNIT_H: actualUnitH,
+    BOXES_PER_LAYER: pack.count,
+    BOXES_PER_PAL: pack.count*actualStack,
+    BOXES_PER_UNIT: pack.count*actualStack*actualTiers,
+    PAL_COLS: palCols,
+    MAX_PAL_ROWS: maxRows,
+    MAX_PAL: palCols*maxRows,
+    PALLET_FITS_FOOTPRINT: palletFitsFootprint,
+    BOX_FITS_FOOTPRINT: boxFitsFootprint,
+    ONE_LOADED_PALLET_FITS_HEIGHT: oneLoadedPalletFitsHeight
+  };
+}
+
+// ── Main draw ─────────────────────────────────────────────────────────────────
+function draw(n){
+  updateEquipmentBadge();
+  var L = calcLayout();
+  updateBoxLegend(L);
+  var viewport = document.getElementById('canvasViewport');
+  var endViewFit = VIEW_ORIENTATION==='front' || VIEW_ORIENTATION==='rear';
+  var PAD = endViewFit ? 72 : (isAesthetic() ? (isFlatbed() ? 150 : 140) : 90);
+  // Keep the actual scale reference the same across view styles so 100% means
+  // the same relative zoom in schematic and aesthetic modes. Larger aesthetic
+  // padding is kept only as extra rendering margin, not as a zoom reduction.
+  var SCALE_PAD = 90;
+  // Normal mode keeps the established 700 px reference. Full screen uses the
+  // additional space to enlarge the simulation immediately at the same zoom value.
+  var viewportWidth = viewport && viewport.clientWidth ? viewport.clientWidth : 700;
+  var REF = isVisualizationFullscreen() ? Math.max(900,Math.min(1400,viewportWidth-40)) : Math.max(320,Math.min(1000,viewportWidth-30));
+  updateProjectionBasis();
+  var sBase = baseScaleForView(REF,viewport,SCALE_PAD);
+  S = sBase * ZOOM;
+  // Compute the true bounding box of the current projection, then shift the
+  // origin so the transport unit remains fully visible in every view.
+  var bounds=projectedContainerBounds();
+  var minX=bounds.minX*S, maxX=bounds.maxX*S, minY=bounds.minY*S, maxY=bounds.maxY*S;
+  // Canvas size = bounding box + PAD on all sides
+  var W = Math.round(maxX - minX + PAD*2);
+  var H = Math.round(maxY - minY + PAD*2);
+  canvas.width  = W;
+  canvas.height = H;
+  canvas.style.width  = '';
+  canvas.style.height = '';
+  // When the zoomed canvas becomes narrower/shorter than its viewport, center it
+  // instead of leaving it pinned to the upper-left corner. Oversized canvases keep
+  // zero margins so drag-to-pan and scroll coordinates remain predictable.
+  var freeX=viewport ? Math.max(0,viewport.clientWidth-W) : 0;
+  var freeY=viewport ? Math.max(0,viewport.clientHeight-H) : 0;
+  canvas.style.marginLeft=Math.round(freeX/2)+'px';
+  canvas.style.marginTop=Math.round(freeY/2)+'px';
+  canvas.style.marginRight='0';
+  canvas.style.marginBottom='0';
+  ctx.clearRect(0,0,W,H);
+  // Shift origin so minX lands at PAD from left, minY lands at PAD from top
+  OX = -minX + PAD;
+  OY = -minY + PAD;
+
+  var maxTotalPallets = L.MAX_PAL * L.ACTUAL_TIERS;
+  var totalPallets = Math.max(0, Math.min(n, maxTotalPallets));
+  var positionsNeeded = L.ACTUAL_TIERS > 0 ? Math.ceil(totalPallets / L.ACTUAL_TIERS) : 0;
+  var pallets=[], placedPositions=0;
+
+  // Load from the rear toward the front (x = 0 onward) using fixed lateral
+  // pallet slots. The complete slot grid is centered across the transport-unit
+  // width, but an incomplete row keeps the same slot positions instead of
+  // re-centering its pallets. This prevents a pallet from jumping sideways when
+  // the next pallet is added while keeping full rows balanced left/right.
+  var usedRows = positionsNeeded > 0 ? Math.ceil(positionsNeeded / Math.max(1,L.PAL_COLS)) : 0;
+  var loadOffsetX = 0;
+  var slotGridWidth=Math.max(0,L.PAL_COLS*PW);
+  var rowOffsetY=Math.max(0,(C.W-slotGridWidth)/2);
+  for(var row=0; row<usedRows; row++){
+    var rowCount=Math.min(L.PAL_COLS,positionsNeeded-placedPositions);
+    for(var col=0; col<rowCount; col++){
+      var remaining = totalPallets - placedPositions*L.ACTUAL_TIERS;
+      var tiersLoaded = Math.max(0, Math.min(L.ACTUAL_TIERS, remaining));
+      pallets.push({
+        row:row,col:col,tiersLoaded:tiersLoaded,
+        x:loadOffsetX+row*PL,
+        y:rowOffsetY+col*PW
+      });
+      placedPositions++;
+    }
+  }
+  pallets.sort(function(a,b){
+    if(VIEW_ORIENTATION==='front') return b.row-a.row;
+    if(VIEW_ORIENTATION==='rear') return a.row-b.row;
+    if(VIEW_ORIENTATION==='side') return b.col-a.col || a.row-b.row;
+    if(VIEW_ORIENTATION==='top') return a.row-b.row || a.col-b.col;
+    return (a.row+a.col*0.5)-(b.row+b.col*0.5);
+  });
+
+  drawContainerBack();
+  pallets.forEach(function(pc){
+    var rx=pc.x, ry=pc.y;
+    var boxOffsetX=Math.max(0,(PL-L.pack.nX*L.pack.boxX)/2);
+    var boxOffsetY=Math.max(0,(PW-L.pack.nY*L.pack.boxY)/2);
+    for(var tier=0; tier<pc.tiersLoaded; tier++){
+      var baseZ=tier*L.UNIT_H;
+      drawPallet(rx,ry,baseZ);
+      for(var layer=0; layer<L.ACTUAL_STACK; layer++){
+        var bz=baseZ+PH+layer*BH;
+        var xiStart=VIEW_ORIENTATION==='front'?L.pack.nX-1:0;
+        var xiEnd=VIEW_ORIENTATION==='front'?-1:L.pack.nX;
+        var xiStep=VIEW_ORIENTATION==='front'?-1:1;
+        var yiStart=VIEW_ORIENTATION==='side'?L.pack.nY-1:0;
+        var yiEnd=VIEW_ORIENTATION==='side'?-1:L.pack.nY;
+        var yiStep=VIEW_ORIENTATION==='side'?-1:1;
+        for(var xi=xiStart; xi!==xiEnd; xi+=xiStep){
+          for(var yi=yiStart; yi!==yiEnd; yi+=yiStep){
+            drawBox(rx+boxOffsetX+xi*L.pack.boxX, ry+boxOffsetY+yi*L.pack.boxY, bz, L.pack.boxX, L.pack.boxY, layer);
+          }
+        }
+      }
+    }
+  });
+  drawContainerFront();
+
+  // ── Dimension annotations (pixel-space, clear of container) ────────────────
+  var fs = Math.max(11, Math.round(11*S/0.9));
+  var tc = dark?'rgba(225,232,238,0.96)':'rgba(18,38,58,0.96)';
+  var lc = dark?'rgba(210,210,205,0.58)':'rgba(45,45,65,0.66)';
+  var tpad = 5;
+
+  function dimLine(a,b,label,offset,containerCenter){
+    var dx=b.x-a.x,dy=b.y-a.y;
+    var nx=-dy,ny=dx,nd=Math.sqrt(nx*nx+ny*ny)||1;
+    nx/=nd;ny/=nd;
+
+    // Select the offset side that points away from the usable-volume centre.
+    var mx0=(a.x+b.x)/2,my0=(a.y+b.y)/2;
+    if(((mx0+nx)-containerCenter.x)*nx+((my0+ny)-containerCenter.y)*ny<0){
+      nx=-nx;ny=-ny;
+    }
+
+    var ax=a.x+nx*offset,ay=a.y+ny*offset;
+    var bx=b.x+nx*offset,by=b.y+ny*offset;
+    var tl=5;
+    ctx.save();
+
+    // Dimension line aligned to the exact usable-surface endpoints, without witness lines.
+    ctx.strokeStyle=lc;ctx.lineWidth=1.2;ctx.setLineDash([4,4]);
+    ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);ctx.stroke();
+    ctx.setLineDash([]);ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(ax-nx*tl,ay-ny*tl);ctx.lineTo(ax+nx*tl,ay+ny*tl);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(bx-nx*tl,by-ny*tl);ctx.lineTo(bx+nx*tl,by+ny*tl);ctx.stroke();
+    ctx.font="600 "+fs+"px 'Barlow Semi Condensed',-apple-system,sans-serif";
+    var tw=ctx.measureText(label).width;
+    var bw=tw+tpad*2+2,bh=fs+tpad*2;
+    var mx=(ax+bx)/2,my=(ay+by)/2;
+    ctx.fillStyle=dark?'rgba(19,32,44,0.94)':'rgba(243,245,246,0.96)';
+    roundedRectPath(mx-bw/2,my-bh/2,bw,bh,4);ctx.fill();
+    ctx.fillStyle=tc;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(label,mx,my);
+    ctx.restore();
+  }
+
+  // Anchor dimensions to the exact usable loading surface.
+  var dimFloorZ=isFlatbed()?Math.min(4,Math.max(2,PH*.8)):0;
+  var center=pt(C.L/2,C.W/2,(dimFloorZ+C.H)/2);
+
+  // Show only dimensions that remain visible in the selected projection.
+  if(VIEW_ORIENTATION==='isometric' || VIEW_ORIENTATION==='top' || VIEW_ORIENTATION==='side'){
+    var pL0=pt(0,C.W,dimFloorZ),pL1=pt(C.L,C.W,dimFloorZ);
+    dimLine(pL0,pL1,C.L+"\u2033 L",30,center);
+  }
+  if(VIEW_ORIENTATION==='isometric' || VIEW_ORIENTATION==='top' || VIEW_ORIENTATION==='front' || VIEW_ORIENTATION==='rear'){
+    var widthAnchorX=VIEW_ORIENTATION==='front'?0:C.L;
+    // Flatbed end views have running gear below the deck. Put the width
+    // dimension above the usable-height envelope so its label never sits on
+    // top of the axle, suspension, or tires.
+    var flatbedEndWidthDim=isAesthetic() && isFlatbed() && (VIEW_ORIENTATION==='front' || VIEW_ORIENTATION==='rear');
+    var widthDimZ=flatbedEndWidthDim?C.H:dimFloorZ;
+    var widthDimOffset=flatbedEndWidthDim?30:42;
+    var pW0=pt(widthAnchorX,0,widthDimZ),pW1=pt(widthAnchorX,C.W,widthDimZ);
+    dimLine(pW0,pW1,C.W+"\u2033 W",widthDimOffset,center);
+  }
+  if(VIEW_ORIENTATION==='isometric' || VIEW_ORIENTATION==='side' || VIEW_ORIENTATION==='front' || VIEW_ORIENTATION==='rear'){
+    var heightAnchorX=VIEW_ORIENTATION==='rear'?C.L:0;
+    var pH0=pt(heightAnchorX,C.W,dimFloorZ),pH1=pt(heightAnchorX,C.W,C.H);
+    dimLine(pH0,pH1,C.H+"\u2033 H",44,center);
+  }
+
+  var totalBoxes = totalPallets * L.BOXES_PER_PAL;
+  var totalParts = totalBoxes * QTY_SUT;
+  var partWeightKg = weightToKg(PART_WEIGHT,PART_WEIGHT_UNIT);
+  var hasWeightData = partWeightKg>0 && QTY_SUT>0;
+  var totalWeightKg = hasWeightData ? totalParts*partWeightKg : 0;
+  var boxVolFt = (totalBoxes*BL*BW*BH)/1728;
+  var palletVolFt = (totalPallets*PL*PW*PH)/1728;
+  var usedVolFt = boxVolFt + palletVolFt;
+  var fillU = C.Vu>0 ? Math.round((usedVolFt/C.Vu)*100) : 0;
+  var rows = placedPositions===0 ? 0 : Math.min(L.MAX_PAL_ROWS, Math.ceil(placedPositions/Math.max(1,L.PAL_COLS)));
+  document.getElementById('statRows').textContent = rows+" / "+L.MAX_PAL_ROWS;
+  document.getElementById('statTotalPallets').textContent = totalPallets+" / "+maxTotalPallets;
+  document.getElementById('statTotalPalletsNote').textContent = "loaded / max";
+  document.getElementById('statPal').textContent = placedPositions+" / "+L.MAX_PAL;
+  document.getElementById('statBpp').textContent = L.BOXES_PER_PAL;
+  document.getElementById('statBppNote').textContent =
+    L.pack.count+" box"+(L.pack.count!==1?"es":"")+"/layer x "+
+    L.ACTUAL_STACK+" layer"+(L.ACTUAL_STACK!==1?"s":"");
+  document.getElementById('statBoxes').textContent = totalBoxes;
+  document.getElementById('statParts').classList.remove('multi-part-total');
+  document.getElementById('statParts').textContent = totalParts;
+  document.getElementById('statPartsNote').textContent = QTY_SUT>0 ? QTY_SUT+" parts/box" : "QTY/SUT not set";
+  document.getElementById('statVolU').textContent = usedVolFt.toFixed(1)+" ft³";
+  document.getElementById('statFill').textContent = fillU+"%";
+  document.getElementById('statWeight').textContent = hasWeightData ? formatKg(totalWeightKg) : '\u2014';
+  document.getElementById('statWeightNote').textContent = hasWeightData ? 'parts only' : (PART_WEIGHT>0 ? 'QTY/SUT required' : 'part weight not set');
+  document.getElementById('statWeightFill').textContent = hasWeightData ? weightFillPercent(totalWeightKg)+'%' : '\u2014';
+  document.getElementById('statWeightFillNote').textContent = '20,200 kg max';
+  var pi=document.getElementById('packingInfo');
+  pi.style.display='block';
+  pi.textContent="Best grid layout: "+L.pack.label;
+  updateConstraintUI(L,hasWeightData?totalWeightKg:null);
+  updateInfoCard(L);
+}
+
+// ── Constraint feedback ───────────────────────────────────────────────────────
+function warningList(items){
+  if(!items.length) return '';
+  return '<ul>'+items.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul>';
+}
+
+function setHint(id,msg,isWarn){
+  var el=document.getElementById(id);
+  if(!el) return;
+  el.textContent=msg;
+  el.classList.toggle('warn', !!isWarn);
+  el.classList.toggle('ok', !isWarn);
+}
+
+function updateConstraintUI(L,loadedWeightKg){
+  setHint('hintBS', 'Max that fits currently: '+L.MAX_LAYERS_FOR_REQUESTED_TIERS+' layer'+(L.MAX_LAYERS_FOR_REQUESTED_TIERS!==1?'s':'')+' with '+L.REQUESTED_TIERS+' requested tier'+(L.REQUESTED_TIERS!==1?'s':''), L.ACTUAL_STACK < L.REQUESTED_STACK);
+  setHint('hintPT', 'Max that fits currently: '+L.MAX_TIERS_FOR_ACTUAL_UNIT+' tier'+(L.MAX_TIERS_FOR_ACTUAL_UNIT!==1?'s':'')+' with '+L.ACTUAL_STACK+' used layer'+(L.ACTUAL_STACK!==1?'s':''), L.ACTUAL_TIERS < L.REQUESTED_TIERS);
+
+  var grid=document.getElementById('constraintGrid');
+  if(grid){
+    grid.innerHTML =
+      '<div class="constraint-item"><span>Pallet type</span><strong>'+currentPalletLabel()+'</strong></div>'+ 
+      '<div class="constraint-item"><span>Pallet dimensions</span><strong>'+PL+'″ L × '+PW+'″ W × '+PH+'″ H</strong></div>'+ 
+      '<div class="constraint-item"><span>Box layers</span><strong>'+L.ACTUAL_STACK+' used / '+L.REQUESTED_STACK+' requested</strong></div>'+ 
+      '<div class="constraint-item"><span>Pallet tiers</span><strong>'+L.ACTUAL_TIERS+' used / '+L.REQUESTED_TIERS+' requested</strong></div>'+ 
+      '<div class="constraint-item"><span>Max pallet positions</span><strong>'+L.PAL_COLS+' columns × '+L.MAX_PAL_ROWS+' rows = '+L.MAX_PAL+'</strong></div>'+ 
+      '<div class="constraint-item"><span>Box layout</span><strong>'+(L.BOX_FITS_FOOTPRINT ? L.pack.label : 'No boxes fit on pallet')+'</strong></div>'+ 
+      '<div class="constraint-item"><span>Unit height</span><strong>'+L.UNIT_H.toFixed(1)+'″ / '+C.H+'″ max</strong></div>';
+  }
+
+  var warnings=[];
+  if(!L.PALLET_FITS_FOOTPRINT){
+    warnings.push('The pallet footprint does not fit in the current loading space. Max pallet positions = 0.');
+  }
+  if(!L.BOX_FITS_FOOTPRINT){
+    warnings.push('The box footprint does not fit on the pallet in either orientation. Boxes per layer = 0.');
+  }
+  if(PH > C.H){
+    warnings.push('The pallet height alone exceeds the available loading height. No pallet tiers fit until the pallet height or loading height changes.');
+  } else if(!L.ONE_LOADED_PALLET_FITS_HEIGHT){
+    warnings.push('Even one box layer plus the pallet height exceeds the available loading height. No box layers fit.');
+  }
+  if(L.ACTUAL_STACK < L.REQUESTED_STACK){
+    warnings.push('Requested '+L.REQUESTED_STACK+' box layers per pallet, but only '+L.ACTUAL_STACK+' fit with the current height and requested tier count.');
+  }
+  if(L.ACTUAL_TIERS < L.REQUESTED_TIERS){
+    warnings.push('Requested '+L.REQUESTED_TIERS+' pallet tiers, but only '+L.ACTUAL_TIERS+' fit with the current used stack height.');
+  }
+  if(Number.isFinite(loadedWeightKg) && loadedWeightKg>MAX_PAYLOAD_KG){
+    warnings.push('Weight limit exceeded: '+formatKg(loadedWeightKg)+' loaded vs '+MAX_PAYLOAD_KG.toLocaleString()+' kg maximum.');
+  }
+
+  var warn=document.getElementById('warnDims');
+  if(warn){
+    if(warnings.length){
+      warn.innerHTML=warningList(warnings);
+      warn.style.display='block';
+    } else {
+      warn.innerHTML='';
+      warn.style.display='none';
+    }
+  }
+}
+
+// ── Info card ─────────────────────────────────────────────────────────────────
+function updateInfoCard(L){
+  var html =
+    '<div class="info-block"><dt>Container</dt><dd>'+C.name+'</dd></div>'+
+    '<div class="info-block"><dt>Interior dimensions</dt><dd>'+C.L+'\u2033 L \u00d7 '+C.W+'\u2033 W \u00d7 '+C.H+'\u2033 H</dd></div>'+
+    '<div class="info-block"><dt>Theoretical volume</dt><dd>'+C.Vt+' ft\u00b3</dd></div>'+
+    '<div class="info-block"><dt>Usable volume</dt><dd>'+C.Vu+' ft\u00b3</dd></div>'+
+    '<div class="info-block"><dt>Maximum payload</dt><dd>'+MAX_PAYLOAD_KG.toLocaleString()+' kg</dd></div>'+
+    '<div class="info-block"><dt>Pallet</dt><dd>'+PL+'\u2033 L \u00d7 '+PW+'\u2033 W \u00d7 '+PH+'\u2033 H</dd></div>'+
+    '<div class="info-block"><dt>Box</dt><dd>'+BL+'\u2033 L \u00d7 '+BW+'\u2033 W \u00d7 '+BH+'\u2033 H</dd></div>'+
+    '<div class="info-block"><dt>Best grid layout</dt><dd>'+L.pack.label+'</dd></div>'+
+    '<div class="info-block"><dt>Boxes per layer per pallet</dt><dd>'+L.pack.count+'</dd></div>'+
+    '<div class="info-block"><dt>Box layers per pallet</dt><dd>'+L.ACTUAL_STACK+' used / '+L.REQUESTED_STACK+' requested</dd></div>'+
+    '<div class="info-block"><dt>Pallet tiers in container</dt><dd>'+L.ACTUAL_TIERS+' used / '+L.REQUESTED_TIERS+' requested</dd></div>'+
+    '<div class="info-block"><dt>Unit height (pallet + boxes)</dt><dd>'+L.UNIT_H.toFixed(1)+'\u2033</dd></div>'+
+    '<div class="info-block"><dt>Total stack height</dt><dd>'+(L.UNIT_H*L.ACTUAL_TIERS).toFixed(1)+'\u2033 (max '+C.H+'\u2033)</dd></div>'+
+    '<div class="info-block"><dt>Max pallet positions</dt><dd>'+L.PAL_COLS+' col \u00d7 '+L.MAX_PAL_ROWS+' rows = '+L.MAX_PAL+'</dd></div>'+
+    '<div class="info-block"><dt>Max total pallets</dt><dd>'+(L.MAX_PAL*L.ACTUAL_TIERS)+'</dd></div>'+ 
+    '<div class="info-block"><dt>Max total boxes</dt><dd>'+(L.MAX_PAL*L.ACTUAL_TIERS*L.BOXES_PER_PAL)+'</dd></div>'+ 
+    '<div class="info-block"><dt>QTY/SUT</dt><dd>'+(QTY_SUT>0 ? QTY_SUT+' parts/box' : 'Not set')+'</dd></div>'+ 
+    '<div class="info-block"><dt>Part weight</dt><dd>'+(PART_WEIGHT>0 ? PART_WEIGHT+' '+PART_WEIGHT_UNIT : 'Not set')+'</dd></div>'+ 
+    '<div class="info-block"><dt>Max total parts</dt><dd>'+(QTY_SUT>0 ? (L.MAX_PAL*L.ACTUAL_TIERS*L.BOXES_PER_PAL*QTY_SUT) : '—')+'</dd></div>';
+  document.getElementById('infoGrid').innerHTML = html;
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function updateDerived(){
+  var l=+document.getElementById('cL').value||0;
+  var w=+document.getElementById('cW').value||0;
+  var h=+document.getElementById('cH').value||0;
+  document.getElementById('derivedVol').innerHTML =
+    '<span>Calculated volume: <strong>'+(l*w*h/1728).toFixed(1)+' ft\u00b3</strong></span>'+
+    '<span style="color:var(--hint)"> \u2014 enter actual theoretical and usable volumes above for accurate fill rate</span>';
+}
+
+function updateEquipmentBadge(){
+  var badge=document.getElementById('equipmentBadge');
+  if(!badge) return;
+  badge.textContent = C.name;
+}
+
+function updateBoxLegend(L){
+  var odd=document.getElementById('boxLegendOdd');
+  var oddLabel=document.getElementById('boxLegendOddLabel');
+  var even=document.getElementById('boxLegendEven');
+  if(!odd || !oddLabel || !even) return;
+  var usesOneBoxColor = !L || L.ACTUAL_STACK <= 1;
+  oddLabel.textContent = usesOneBoxColor ? 'Boxes' : 'Boxes — odd layers';
+  even.classList.toggle('hidden', usesOneBoxColor);
+}
+
+function currentPalletLabel(){
+  if(PALLET_TYPE === 'custom') return 'Custom pallet ('+PALLET_MATERIAL+')';
+  return PALLET_PRESETS[PALLET_TYPE] ? PALLET_PRESETS[PALLET_TYPE].label : 'Custom pallet';
+}
+
+function syncPalletPicker(){
+  var picker=document.getElementById('palletPresetPicker');
+  if(!picker) return;
+  var selected=PALLET_TYPE || 'wood';
+  var selectedOption=picker.querySelector('.custom-select-option[data-value="'+selected+'"]');
+  if(!selectedOption) selectedOption=picker.querySelector('.custom-select-option[data-value="custom"]');
+  picker.querySelectorAll('.custom-select-option').forEach(function(opt){
+    var active = opt === selectedOption;
+    opt.classList.toggle('selected', active);
+    opt.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
+  var main=picker.querySelector('.custom-select-main');
+  var meta=picker.querySelector('.custom-select-meta');
+  if(main && selectedOption) main.textContent = selectedOption.querySelector('.option-main').textContent;
+  if(meta && selectedOption) meta.textContent = selectedOption.querySelector('.option-meta').textContent;
+}
+
+function updatePalletUI(){
+  var custom = PALLET_TYPE === 'custom';
+  var dims=document.getElementById('customPalletDims');
+  if(dims) dims.classList.toggle('hidden', !custom);
+
+  var hint=document.getElementById('hintPalletPreset');
+  if(hint){
+    hint.textContent = custom
+      ? 'Custom dimensions; default placeholders are 48″ L × 45″ W × 5″ H'
+      : PL+'″ L × '+PW+'″ W × '+PH+'″ H';
+  }
+
+  var colors=palletColors();
+  var swatch=document.getElementById('palletLegendSwatch');
+  if(swatch) swatch.style.background = colors.top;
+  var label=document.getElementById('palletLegendLabel');
+  if(label) label.textContent = 'Pallet ('+PALLET_MATERIAL+')';
+  syncPalletPicker();
+}
+
+function applyPalletPreset(key){
+  PALLET_TYPE = key;
+  if(PALLET_PRESETS[key]){
+    var p=PALLET_PRESETS[key];
+    PL=p.L; PW=p.W; PH=p.H; PALLET_MATERIAL=p.material;
+    document.getElementById('dPL').value=p.L;
+    document.getElementById('dPW').value=p.W;
+    document.getElementById('dPH').value=p.H;
+  } else {
+    PALLET_TYPE='custom';
+    PALLET_MATERIAL='wood';
+  }
+  updatePalletUI();
+}
+
+function updateSlider(){
+  var L=calcLayout();
+  var slider=document.getElementById('slider');
+  var maxPallets = L.MAX_PAL * L.ACTUAL_TIERS;
+  slider.max=Math.max(0,maxPallets);
+  if(+slider.value>maxPallets) slider.value=maxPallets;
+  if(+slider.value<0) slider.value=0;
+  document.getElementById('sliderVal').textContent=slider.value;
+  return +slider.value;
+}
+
+function updateViewStyleButton(){
+  var btn=document.getElementById('viewStyleToggle');
+  var text=document.getElementById('viewStyleText');
+  var aesthetic=isAesthetic();
+  if(btn){
+    btn.classList.remove('active');
+    btn.setAttribute('aria-pressed','false');
+    btn.setAttribute('aria-label',aesthetic?'Switch to schematic view':'Switch to aesthetic view');
+    btn.setAttribute('title',aesthetic?'Switch to schematic view':'Switch to aesthetic view');
+  }
+  if(text) text.textContent=aesthetic?'Switch to schematic':'Switch to aesthetic';
+}
+
+function updateViewOrientationButtons(){
+  var labels={isometric:'Isometric',top:'Top',side:'Side',front:'Front',rear:'Rear'};
+  document.querySelectorAll('.view-tab').forEach(function(btn){
+    var active=btn.getAttribute('data-view')===VIEW_ORIENTATION;
+    btn.classList.toggle('active',active);
+    btn.setAttribute('aria-pressed',active?'true':'false');
+  });
+  var canvasEl=document.getElementById('c');
+  if(canvasEl) canvasEl.setAttribute('aria-label',(labels[VIEW_ORIENTATION]||'Isometric')+' loading visualization');
+}
+
+function visualizationCard(){
+  return document.querySelector('.visualization-card');
+}
+
+function browserFullscreenElement(){
+  return document.fullscreenElement || document.webkitFullscreenElement || null;
+}
+
+function isVisualizationFullscreen(){
+  var card=visualizationCard();
+  return !!card && (browserFullscreenElement()===card || card.classList.contains('fullscreen-fallback'));
+}
+
+function syncFullscreenButton(){
+  var active=isVisualizationFullscreen();
+  var text=document.getElementById('fullscreenText');
+  var icon=document.getElementById('fullscreenIcon');
+  var btn=document.getElementById('fullscreenToggle');
+  if(text) text.textContent=active?'Exit full screen':'Full screen';
+  if(icon) icon.textContent=active?'⛶':'⛶';
+  if(btn) btn.setAttribute('aria-label',active?'Exit full screen':'Enter full screen');
+}
+
+function enableFullscreenFallback(){
+  var card=visualizationCard();
+  if(!card) return;
+  card.classList.add('fullscreen-fallback');
+  document.documentElement.classList.add('viewer-fullscreen-fallback');
+  document.body.classList.add('viewer-fullscreen-fallback');
+  syncFullscreenButton();
+  draw(+document.getElementById('slider').value);
+  centerViewport();
+}
+
+function disableFullscreenFallback(){
+  var card=visualizationCard();
+  if(!card) return;
+  card.classList.remove('fullscreen-fallback');
+  document.documentElement.classList.remove('viewer-fullscreen-fallback');
+  document.body.classList.remove('viewer-fullscreen-fallback');
+}
+
+function toggleVisualizationFullscreen(){
+  var card=visualizationCard();
+  if(!card) return;
+  if(isVisualizationFullscreen()){
+    if(browserFullscreenElement()){
+      var exit=document.exitFullscreen || document.webkitExitFullscreen;
+      if(exit) exit.call(document);
+    } else {
+      disableFullscreenFallback();
+      syncFullscreenButton();
+      draw(+document.getElementById('slider').value);
+      centerViewport();
+    }
+    return;
+  }
+  var request=card.requestFullscreen || card.webkitRequestFullscreen;
+  if(request){
+    try {
+      var result=request.call(card);
+      if(result && result.catch) result.catch(enableFullscreenFallback);
+    } catch(e){
+      enableFullscreenFallback();
+    }
+  } else {
+    enableFullscreenFallback();
+  }
+}
+
+function centerViewport(){
+  var vp=document.getElementById('canvasViewport');
+  // Wait one frame so the browser has laid out the new canvas size
+  requestAnimationFrame(function(){
+    vp.scrollLeft = Math.max(0, (vp.scrollWidth  - vp.clientWidth)  / 2);
+    vp.scrollTop  = Math.max(0, (vp.scrollHeight - vp.clientHeight) / 2);
+  });
+}
+
+function clamp(n,min,max){
+  return Math.max(min, Math.min(max, n));
+}
+
+function zoomFactorFromPercent(percent){
+  return (percent/100) * ZOOM_BASE;
+}
+
+function setZoomPercent(value, options){
+  options = options || {};
+  var vp = document.getElementById('canvasViewport');
+  var slider = document.getElementById('zoomSlider');
+  var label = document.getElementById('zoomVal');
+  var next = clamp(+value || 100, 50, 400);
+  var focus = null;
+
+  if(options.preserveFocus && vp){
+    var rect=vp.getBoundingClientRect();
+    var localX=Number.isFinite(options.clientX) ? options.clientX-rect.left : vp.clientWidth/2;
+    var localY=Number.isFinite(options.clientY) ? options.clientY-rect.top : vp.clientHeight/2;
+    localX=clamp(localX,0,vp.clientWidth);
+    localY=clamp(localY,0,vp.clientHeight);
+    focus = {
+      x: vp.scrollLeft + localX,
+      y: vp.scrollTop + localY,
+      localX: localX,
+      localY: localY,
+      w: Math.max(1, vp.scrollWidth),
+      h: Math.max(1, vp.scrollHeight)
+    };
+  }
+
+  ZOOM = zoomFactorFromPercent(next);
+  if(slider) slider.value = Math.round(next);
+  if(label) label.textContent = Math.round(next) + '%';
+  draw(+document.getElementById('slider').value);
+
+  if(focus && vp){
+    requestAnimationFrame(function(){
+      if(vp.scrollWidth > vp.clientWidth){
+        var tx = focus.x / focus.w * vp.scrollWidth - focus.localX;
+        vp.scrollLeft = clamp(tx,0,vp.scrollWidth-vp.clientWidth);
+      } else {
+        vp.scrollLeft = 0;
+      }
+      if(vp.scrollHeight > vp.clientHeight){
+        var ty = focus.y / focus.h * vp.scrollHeight - focus.localY;
+        vp.scrollTop = clamp(ty,0,vp.scrollHeight-vp.clientHeight);
+      } else {
+        vp.scrollTop = 0;
+      }
+    });
+  } else if(options.center !== false) {
+    centerViewport();
+  }
+
+  if(options.save !== false) saveState();
+}
+
+function fillPresetFields(p){
+  document.getElementById('cL').value=p.L;
+  document.getElementById('cW').value=p.W;
+  document.getElementById('cH').value=p.H;
+  document.getElementById('cVt').value=p.Vt;
+  document.getElementById('cVu').value=p.Vu;
+  document.getElementById('presetBadge').textContent=p.L+"\u2033 \u00d7 "+p.W+"\u2033 \u00d7 "+p.H+"\u2033";
+  updateDerived();
+}
+
+// ── Validation + auto-update ──────────────────────────────────────────────────
+function showWarning(el,msg){
+  el.textContent=msg;
+  el.style.display='block';
+}
+
+function hideWarning(el){
+  el.textContent='';
+  el.style.display='none';
+}
+
+function getNum(id){
+  var el=document.getElementById(id);
+  if(!el) return NaN;
+  if(el.value==='') return NaN;
+  return +el.value;
+}
+
+function applyContainerInputs(options){
+  options = options || {};
+  var warn=document.getElementById('warnContainer');
+  var nL=getNum('cL');
+  var nW=getNum('cW');
+  var nH=getNum('cH');
+  var nVt=getNum('cVt');
+  var nVu=getNum('cVu');
+
+  if(!nL||!nW||!nH||!nVt||!nVu||nL<=0||nW<=0||nH<=0||nVt<=0||nVu<=0){
+    showWarning(warn,'All values must be greater than 0.');
+    return false;
+  }
+  if(nVu>nVt){
+    showWarning(warn,'Usable volume cannot exceed theoretical volume.');
+    return false;
+  }
+
+  hideWarning(warn);
+  C={L:nL,W:nW,H:nH,Vt:nVt,Vu:nVu,name:options.name||'Custom',type:options.type||'enclosed',kind:options.kind||inferEquipmentKind(options.name,options.type)};
+  draw(updateSlider());
+  if(options.center) centerViewport();
+  saveState();
+  return true;
+}
+
+function applyDimensionInputs(options){
+  options = options || {};
+  var warn=document.getElementById('warnDims');
+  var selectedPallet=(document.getElementById('palletPreset')||{}).value || PALLET_TYPE;
+  var preset=PALLET_PRESETS[selectedPallet];
+  var nPL=preset ? preset.L : getNum('dPL');
+  var nPW=preset ? preset.W : getNum('dPW');
+  var nPH=preset ? preset.H : getNum('dPH');
+  var nBL=getNum('dBL');
+  var nBW=getNum('dBW');
+  var nBH=getNum('dBH');
+  var nBS=getNum('dBS');
+  var nPT=getNum('dPT');
+  var nQTY=getNum('dQTY');
+  var nPartWeight=getNum('dPartWeight');
+  var nWeightUnit=(document.getElementById('dWeightUnit')||{}).value==='lb'?'lb':'kg';
+
+  if(!nPL||!nPW||!nPH||!nBL||!nBW||!nBH||!nBS||!nPT||nPL<=0||nPW<=0||nPH<=0||nBL<=0||nBW<=0||nBH<=0||nBS<=0||nPT<=0){
+    showWarning(warn,'All dimension, layer, and tier values must be greater than 0.');
+    return false;
+  }
+  if(!Number.isFinite(nQTY)) nQTY=0;
+  if(nQTY<0){
+    showWarning(warn,'QTY/SUT must be 0 or greater.');
+    return false;
+  }
+  if(!Number.isFinite(nPartWeight)) nPartWeight=0;
+  if(nPartWeight<0){
+    showWarning(warn,'Part weight must be 0 or greater.');
+    return false;
+  }
+  if(nPH>=C.H){
+    showWarning(warn,'Pallet height ('+nPH+'\u2033) exceeds container height ('+C.H+'\u2033).');
+    return false;
+  }
+
+  PL=nPL; PW=nPW; PH=nPH;
+  PALLET_TYPE = preset ? selectedPallet : 'custom';
+  PALLET_MATERIAL = preset ? preset.material : 'wood';
+  BL=nBL; BW=nBW; BH=nBH; MAX_STACK=Math.floor(nBS); PAL_TIERS=Math.floor(nPT); QTY_SUT=Math.floor(nQTY); PART_WEIGHT=nPartWeight; PART_WEIGHT_UNIT=nWeightUnit;
+  updatePalletUI();
+
+  if(nPH+nBH>C.H){
+    showWarning(warn,'Warning: even 1 layer ('+nPH+'\u2033 + '+nBH+'\u2033 = '+(nPH+nBH)+'\u2033) exceeds container height ('+C.H+'\u2033). No boxes will be placed.');
+  } else {
+    hideWarning(warn);
+  }
+
+  draw(updateSlider());
+  if(options.center) centerViewport();
+  saveState();
+  return true;
+}
+
+function debounce(fn,delay){
+  var timer=null;
+  return function(){
+    var args=arguments;
+    clearTimeout(timer);
+    timer=setTimeout(function(){ fn.apply(null,args); },delay);
+  };
+}
+
+function selectedContainerPreset(){
+  var el=document.getElementById('containerPreset');
+  return el ? el.value : 'custom';
+}
+
+function collectState(){
+  return {
+    version: 1,
+    containerPreset: selectedContainerPreset(),
+    container: { L:C.L, W:C.W, H:C.H, Vt:C.Vt, Vu:C.Vu, name:C.name, type:C.type, kind:C.kind },
+    viewStyle: VIEW_STYLE,
+    viewOrientation: VIEW_ORIENTATION,
+    containerInputs: {
+      cL: document.getElementById('cL').value,
+      cW: document.getElementById('cW').value,
+      cH: document.getElementById('cH').value,
+      cVt: document.getElementById('cVt').value,
+      cVu: document.getElementById('cVu').value
+    },
+    palletPreset: (document.getElementById('palletPreset')||{}).value || PALLET_TYPE,
+    pallet: { PL:PL, PW:PW, PH:PH, type:PALLET_TYPE, material:PALLET_MATERIAL },
+    dimensions: {
+      dPL: document.getElementById('dPL').value,
+      dPW: document.getElementById('dPW').value,
+      dPH: document.getElementById('dPH').value,
+      dBL: document.getElementById('dBL').value,
+      dBW: document.getElementById('dBW').value,
+      dBH: document.getElementById('dBH').value,
+      dBS: document.getElementById('dBS').value,
+      dPT: document.getElementById('dPT').value,
+      dQTY: document.getElementById('dQTY').value,
+      dPartWeight: document.getElementById('dPartWeight').value,
+      dWeightUnit: document.getElementById('dWeightUnit').value
+    },
+    slider: document.getElementById('slider').value,
+    zoom: document.getElementById('zoomSlider').value,
+    containerDimsOpen: document.getElementById('containerDimsBody').classList.contains('open'),
+    dimsOpen: document.getElementById('dimsBody').classList.contains('open')
+  };
+}
+
+function saveState(){
+  if(isLoadingSavedState) return;
+  storageSet(STORAGE_KEY, JSON.stringify(collectState()));
+}
+
+function loadSavedState(){
+  var raw=null, state=null;
+  raw=storageGet(STORAGE_KEY);
+  if(!raw) return false;
+  try { state=JSON.parse(raw); }
+  catch(e) { return false; }
+  if(!state || state.version !== 1) return false;
+
+  isLoadingSavedState = true;
+  try {
+    var containerPreset=document.getElementById('containerPreset');
+    if(containerPreset) containerPreset.value = state.containerPreset || 'custom';
+    if(state.containerInputs){
+      CONTAINER_INPUT_IDS.forEach(function(id){
+        if(state.containerInputs[id] !== undefined && document.getElementById(id)) document.getElementById(id).value = state.containerInputs[id];
+      });
+    }
+    updateDerived();
+    if(state.container){
+      C={
+        L:+state.container.L || 473.6,
+        W:+state.container.W || 92.6,
+        H:+state.container.H || 106.3,
+        Vt:+state.container.Vt || 2694,
+        Vu:+state.container.Vu || 2529,
+        name: state.container.name || 'Custom',
+        type: state.container.type || 'enclosed',
+        kind: state.container.kind || inferEquipmentKind(state.container.name,state.container.type)
+      };
+    }
+    var badge=document.getElementById('presetBadge');
+    if(badge){
+      if(containerPreset && PRESETS[containerPreset.value]) badge.textContent = C.L+"\u2033 \u00d7 "+C.W+"\u2033 \u00d7 "+C.H+"\u2033";
+      else badge.textContent = '';
+    }
+
+    var native=document.getElementById('palletPreset');
+    if(native) native.value = state.palletPreset || 'wood';
+    if(state.dimensions){
+      DIMENSION_INPUT_IDS.forEach(function(id){
+        if(state.dimensions[id] !== undefined && document.getElementById(id)) document.getElementById(id).value = state.dimensions[id];
+      });
+    }
+    if(state.pallet){
+      PL=+state.pallet.PL || 48;
+      PW=+state.pallet.PW || 45;
+      PH=+state.pallet.PH || 5;
+      PALLET_TYPE=state.pallet.type || state.palletPreset || 'wood';
+      PALLET_MATERIAL=state.pallet.material || 'wood';
+    }
+    BL=+((state.dimensions||{}).dBL) || 45;
+    BW=+((state.dimensions||{}).dBW) || 24;
+    BH=+((state.dimensions||{}).dBH) || 18;
+    MAX_STACK=Math.max(1, Math.floor(+((state.dimensions||{}).dBS) || 4));
+    PAL_TIERS=Math.max(1, Math.floor(+((state.dimensions||{}).dPT) || 1));
+    QTY_SUT=Math.max(0, Math.floor(+((state.dimensions||{}).dQTY) || 0));
+    PART_WEIGHT=Math.max(0, +((state.dimensions||{}).dPartWeight) || 0);
+    PART_WEIGHT_UNIT=((state.dimensions||{}).dWeightUnit==='lb')?'lb':'kg';
+    if(document.getElementById('dWeightUnit')) document.getElementById('dWeightUnit').value=PART_WEIGHT_UNIT;
+
+    updatePalletUI();
+    var containerDimsToggle=document.getElementById('containerDimsToggle');
+    var containerDimsBody=document.getElementById('containerDimsBody');
+    if(containerDimsToggle && containerDimsBody){
+      containerDimsToggle.classList.toggle('open', !!state.containerDimsOpen);
+      containerDimsBody.classList.toggle('open', !!state.containerDimsOpen);
+    }
+    var dimsToggle=document.getElementById('dimsToggle');
+    var dimsBody=document.getElementById('dimsBody');
+    if(dimsToggle && dimsBody){
+      dimsToggle.classList.toggle('open', !!state.dimsOpen);
+      dimsBody.classList.toggle('open', !!state.dimsOpen);
+    }
+
+    VIEW_STYLE = state.viewStyle === 'aesthetic' ? 'aesthetic' : 'schematic';
+    VIEW_ORIENTATION = ['isometric','top','side','front','rear'].indexOf(state.viewOrientation)>=0 ? state.viewOrientation : 'isometric';
+    updateProjectionBasis();
+    updateViewStyleButton();
+    updateViewOrientationButtons();
+    var zoomSlider=document.getElementById('zoomSlider');
+    if(zoomSlider && state.zoom !== undefined){
+      zoomSlider.value = state.zoom;
+      ZOOM = zoomFactorFromPercent(+state.zoom || 100);
+      document.getElementById('zoomVal').textContent = zoomSlider.value+'%';
+    }
+    var slider=document.getElementById('slider');
+    if(slider && state.slider !== undefined) slider.value = state.slider;
+
+    applyContainerInputs({name:C.name,type:C.type,kind:C.kind,center:false});
+    applyDimensionInputs({center:false});
+  } finally {
+    isLoadingSavedState = false;
+  }
+  draw(updateSlider());
+  return true;
+}
+
+function resetToDefaults(){
+  isLoadingSavedState = true;
+  storageRemove(STORAGE_KEY);
+  var p=PRESETS.sea40hc;
+  document.getElementById('containerPreset').value='sea40hc';
+  fillPresetFields(p);
+  C={L:p.L,W:p.W,H:p.H,Vt:p.Vt,Vu:p.Vu,name:p.name,type:p.type,kind:p.kind};
+
+  document.getElementById('palletPreset').value='wood';
+  document.getElementById('dPL').value=48;
+  document.getElementById('dPW').value=45;
+  document.getElementById('dPH').value=5;
+  document.getElementById('dBL').value=45;
+  document.getElementById('dBW').value=24;
+  document.getElementById('dBH').value=18;
+  document.getElementById('dBS').value=4;
+  document.getElementById('dPT').value=1;
+  document.getElementById('dQTY').value=0;
+  document.getElementById('dPartWeight').value='';
+  document.getElementById('dWeightUnit').value='kg';
+  PL=48; PW=45; PH=5; PALLET_TYPE='wood'; PALLET_MATERIAL='wood';
+  BL=45; BW=24; BH=18; MAX_STACK=4; PAL_TIERS=1; QTY_SUT=0; PART_WEIGHT=0; PART_WEIGHT_UNIT='kg';
+  updatePalletUI();
+  hideWarning(document.getElementById('warnContainer'));
+  hideWarning(document.getElementById('warnDims'));
+
+  ZOOM=ZOOM_BASE;
+  VIEW_STYLE='schematic';
+  VIEW_ORIENTATION='isometric';
+  updateProjectionBasis();
+  updateViewStyleButton();
+  updateViewOrientationButtons();
+  document.getElementById('zoomSlider').value=100;
+  document.getElementById('zoomVal').textContent='100%';
+  document.getElementById('slider').value=6;
+  document.getElementById('containerDimsToggle').classList.remove('open');
+  document.getElementById('containerDimsBody').classList.remove('open');
+  document.getElementById('dimsToggle').classList.remove('open');
+  document.getElementById('dimsBody').classList.remove('open');
+  isLoadingSavedState = false;
+  draw(updateSlider());
+  centerViewport();
+  saveState();
+}
+
+var scheduleContainerUpdate = debounce(function(){
+  applyContainerInputs({center:true});
+},250);
+
+var scheduleDimensionUpdate = debounce(function(){
+  applyDimensionInputs({center:true});
+},250);
+
+
+// ── Multiple-part mode ───────────────────────────────────────────────────────
+var MULTI_COLORS=[
+  {top:'#4DB6BE',side:'#2A8C94',end:'#1B636A'},
+  {top:'#E9B44C',side:'#BF8A26',end:'#86601A'},
+  {top:'#E3826A',side:'#B65A45',end:'#7E3B2D'},
+  {top:'#9C8FD6',side:'#7465B0',end:'#4F4380'},
+  {top:'#86BF6A',side:'#5F9747',end:'#406B30'},
+  {top:'#D6A461',side:'#B07D3F',end:'#7C5424'}
+];
+
+function multiColor(index){ return MULTI_COLORS[index % MULTI_COLORS.length]; }
+function safeText(value){ return String(value==null?'':value).replace(/[&<>\"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c];}); }
+function isMultiMode(){ return LOAD_MODE==='multi'; }
+
+function multiPalletFromType(type){
+  var key=PALLET_PRESETS[type]?type:'wood';
+  var p=PALLET_PRESETS[key];
+  return {type:key,L:p.L,W:p.W,H:p.H,material:p.material,label:p.label};
+}
+
+function multiPalletOptions(selected){
+  return Object.keys(PALLET_PRESETS).map(function(key){
+    var p=PALLET_PRESETS[key];
+    return '<option value="'+key+'"'+(selected===key?' selected':'')+'>'+safeText(p.label)+' — '+p.L+'″ × '+p.W+'″ × '+p.H+'″</option>';
+  }).join('');
+}
+
+function renderMultiParts(){
+  var list=byId('multiPartsList');
+  if(!list) return;
+  list.innerHTML=MULTI_PARTS.map(function(p,i){
+    p.palletType=PALLET_PRESETS[p.palletType]?p.palletType:'wood';
+    return '<div class="multi-part-row" data-id="'+safeText(p.id)+'">'+
+      '<div class="multi-part-row-head"><div class="multi-part-ident">'+
+      '<span class="multi-part-swatch" style="background:'+multiColor(i).top+'"></span>'+
+      '<input class="multi-part-name" data-field="name" value="'+safeText(p.name)+'" aria-label="Part name">'+
+      '</div><button class="multi-remove" type="button" data-action="remove"'+(MULTI_PARTS.length<=2?' disabled':'')+'>Remove</button></div>'+
+      '<div class="multi-part-fields">'+
+      multiField('Box length','L',p.L,'number','in')+
+      multiField('Box width','W',p.W,'number','in')+
+      multiField('Box height','H',p.H,'number','in')+
+      multiField('Parts / box','partsPerBox',p.partsPerBox,'number','')+
+      multiWeightField(p)+
+      '<div class="multi-field"><label>Quantity based on</label><select data-field="basis"><option value="parts"'+(p.basis==='parts'?' selected':'')+'>Parts</option><option value="boxes"'+(p.basis==='boxes'?' selected':'')+'>Boxes</option></select></div>'+
+      multiField('Exact quantity','target',p.target,'number','')+
+      multiField('Max layers / pallet','maxLayersLimit',p.maxLayersLimit,'number','')+
+      '<div class="multi-field"><label>Pallet type</label><select data-field="palletType">'+multiPalletOptions(p.palletType)+'</select></div>'+
+      '<div class="multi-field multi-stack-check"><label>Vertical pallet stacking</label><label class="multi-check"><input data-field="noPalletStack" type="checkbox"'+(p.noPalletStack?' checked':'')+'> Pallets cannot be stacked</label></div>'+
+      '</div></div>';
+  }).join('');
+}
+
+function multiWeightField(p){
+  var unit=p.weightUnit==='lb'?'lb':'kg';
+  return '<div class="multi-field"><label>Part weight (optional)</label><div class="multi-weight-row">'+
+    '<input data-field="partWeight" type="number" min="0" step="0.01" value="'+safeText(p.partWeight==null?'':p.partWeight)+'" placeholder="Weight" aria-label="Part weight">'+
+    '<select data-field="weightUnit" aria-label="Part weight unit"><option value="kg"'+(unit==='kg'?' selected':'')+'>kg</option><option value="lb"'+(unit==='lb'?' selected':'')+'>lb</option></select>'+ 
+    '</div></div>';
+}
+
+function multiField(label,field,value,type,unit,placeholder){
+  var min=(field==='target'||field==='maxLayersLimit')?'0':'1';
+  var step=(field==='partsPerBox'||field==='target'||field==='maxLayersLimit')?'1':'0.5';
+  var attrs=' data-field="'+field+'" type="'+type+'" min="'+min+'" step="'+step+'" value="'+safeText(value==null?'':value)+'"';
+  if(placeholder) attrs+=' placeholder="'+safeText(placeholder)+'"';
+  return '<div class="multi-field"><label>'+label+(unit?' ('+unit+')':'')+'</label><input'+attrs+'></div>';
+}
+
+function readMultiRows(){
+  Array.prototype.slice.call(document.querySelectorAll('.multi-part-row')).forEach(function(row){
+    var p=MULTI_PARTS.find(function(x){return x.id===row.getAttribute('data-id');});
+    if(!p) return;
+    row.querySelectorAll('[data-field]').forEach(function(el){
+      var f=el.getAttribute('data-field');
+      if(f==='name'||f==='basis'||f==='palletType'||f==='weightUnit') p[f]=el.value;
+      else if(f==='noPalletStack') p[f]=!!el.checked;
+      else if(f==='maxLayersLimit') p[f]=el.value.trim()===''?'':Math.max(1,Math.floor(+el.value||1));
+      else if(f==='partWeight') p[f]=el.value.trim()===''?'':Math.max(0,+el.value||0);
+      else p[f]=Math.max(f==='target'?0:1,+el.value||0);
+    });
+  });
+}
+
+function updateLoadModeUI(){
+  var multi=isMultiMode();
+  byId('singleModeTab').classList.toggle('active',!multi);
+  byId('multiModeTab').classList.toggle('active',multi);
+  byId('singleModeTab').setAttribute('aria-selected',multi?'false':'true');
+  byId('multiModeTab').setAttribute('aria-selected',multi?'true':'false');
+  byId('singlePalletCard').classList.toggle('hidden',multi);
+  byId('singleBoxCard').classList.toggle('hidden',multi);
+  byId('singleLoadingCard').classList.toggle('hidden',multi);
+  byId('multiPartPanel').classList.toggle('hidden',!multi);
+  byId('dimsToggleLabel').textContent=multi?'Part, Pallet & Box Settings':'Pallet & Box Settings';
+  renderMultiParts();
+  updateBoxLegend(calcLayout());
+}
+
+function setLoadMode(mode){
+  LOAD_MODE=mode==='multi'?'multi':'single';
+  updateLoadModeUI();
+  draw(updateSlider());
+  centerViewport();
+  saveState();
+}
+
+function bestPackingForPart(part,pallet){
+  var options=[];
+  [[part.L,part.W],[part.W,part.L]].forEach(function(o,idx){
+    var nX=Math.floor((pallet.L+1e-7)/o[0]),nY=Math.floor((pallet.W+1e-7)/o[1]);
+    options.push({nX:nX,nY:nY,boxX:o[0],boxY:o[1],count:nX*nY,rotated:idx===1,footprintL:nX*o[0],footprintW:nY*o[1]});
+  });
+  options.sort(function(a,b){
+    if(a.count!==b.count) return b.count-a.count;
+    var wasteA=pallet.L*pallet.W-a.footprintL*a.footprintW,wasteB=pallet.L*pallet.W-b.footprintL*b.footprintW;
+    return wasteA-wasteB;
+  });
+  var best=options[0];
+  best.label=best.nX+' along length × '+best.nY+' along width = '+best.count+' boxes/layer';
+  return best;
+}
+
+function validMultiParts(){
+  return MULTI_PARTS.map(function(p,i){
+    var pallet=multiPalletFromType(p.palletType);
+    var q={
+      id:p.id,name:(p.name||('Part '+(i+1))).trim(),L:+p.L,W:+p.W,H:+p.H,
+      partsPerBox:Math.max(1,Math.floor(+p.partsPerBox||1)),partWeight:Math.max(0,+p.partWeight||0),weightUnit:p.weightUnit==='lb'?'lb':'kg',basis:p.basis==='boxes'?'boxes':'parts',
+      target:Math.max(0,+p.target||0),index:i,pallet:pallet,palletType:pallet.type,
+      maxLayersLimit:Math.max(0,Math.floor(+p.maxLayersLimit||0)),
+      noPalletStack:!!p.noPalletStack
+    };
+    q.partWeightKg=weightToKg(q.partWeight,q.weightUnit);
+    q.pack=bestPackingForPart(q,pallet);
+    q.targetBoxes=q.basis==='parts'?Math.ceil(q.target/q.partsPerBox):Math.ceil(q.target);
+    q.boxVolume=q.L*q.W*q.H;
+    q.maxLayersByHeight=Math.max(0,Math.floor((C.H-pallet.H+1e-7)/q.H));
+    q.maxLayers=q.maxLayersLimit>0?Math.min(q.maxLayersByHeight,q.maxLayersLimit):q.maxLayersByHeight;
+    q.maxBoxesPerPallet=q.pack.count*q.maxLayers;
+    return q;
+  }).filter(function(p){return p.L>0&&p.W>0&&p.H>0&&p.pack.count>0&&p.maxLayers>0;});
+}
+
+function makeHomogeneousPalletPattern(part,boxCount,sequence){
+  var layers=[],remaining=boxCount,z=0;
+  var offsetX=(part.pallet.L-part.pack.footprintL)/2;
+  var offsetY=(part.pallet.W-part.pack.footprintW)/2;
+  while(remaining>0&&layers.length<part.maxLayers){
+    var count=Math.min(part.pack.count,remaining);
+    layers.push({
+      part:part,count:count,z:z,
+      layout:{nX:part.pack.nX,nY:part.pack.nY,boxX:part.pack.boxX,boxY:part.pack.boxY,offsetX:offsetX,offsetY:offsetY}
+    });
+    remaining-=count;
+    z+=part.H;
+  }
+  return {
+    sequence:sequence,part:part,pallet:part.pallet,layers:layers,
+    boxCount:boxCount,partsCount:boxCount*part.partsPerBox,
+    boxVolume:boxCount*part.boxVolume,palletVolume:part.pallet.L*part.pallet.W*part.pallet.H,
+    height:part.pallet.H+layers.length*part.H
+  };
+}
+
+function requestedMultiPallets(parts){
+  var pallets=[],sequence=0;
+  parts.forEach(function(part){
+    var remaining=part.targetBoxes;
+    while(remaining>0&&part.maxBoxesPerPallet>0){
+      var count=Math.min(remaining,part.maxBoxesPerPallet);
+      pallets.push(makeHomogeneousPalletPattern(part,count,sequence++));
+      remaining-=count;
+    }
+  });
+  return pallets;
+}
+
+function makeVerticalPalletStack(pallets){
+  var first=pallets[0];
+  return {
+    sequence:Math.min.apply(null,pallets.map(function(p){return p.sequence;})),
+    part:first.part,
+    pallet:first.pallet,
+    pallets:pallets,
+    boxCount:pallets.reduce(function(s,p){return s+p.boxCount;},0),
+    partsCount:pallets.reduce(function(s,p){return s+p.partsCount;},0),
+    boxVolume:pallets.reduce(function(s,p){return s+p.boxVolume;},0),
+    palletVolume:pallets.reduce(function(s,p){return s+p.palletVolume;},0),
+    height:pallets.reduce(function(s,p){return s+p.height;},0)
+  };
+}
+
+function groupPalletsIntoVerticalStacks(pallets){
+  var byPart={};
+  pallets.forEach(function(p){
+    var key=String(p.part.index);
+    if(!byPart[key]) byPart[key]=[];
+    byPart[key].push(p);
+  });
+
+  var stacks=[];
+  Object.keys(byPart).forEach(function(key){
+    var group=byPart[key].slice().sort(function(a,b){return b.height-a.height||a.sequence-b.sequence;});
+    if(group[0].part.noPalletStack){
+      group.forEach(function(p){stacks.push(makeVerticalPalletStack([p]));});
+      return;
+    }
+
+    var partStacks=[];
+    group.forEach(function(p){
+      var bestIndex=-1,bestRemaining=Infinity;
+      partStacks.forEach(function(stack,i){
+        var remaining=C.H-(stack.height+p.height);
+        if(remaining>=-1e-7&&remaining<bestRemaining){bestIndex=i;bestRemaining=remaining;}
+      });
+      if(bestIndex<0){
+        partStacks.push({height:p.height,pallets:[p]});
+      }else{
+        partStacks[bestIndex].pallets.push(p);
+        partStacks[bestIndex].height+=p.height;
+      }
+    });
+    partStacks.forEach(function(stack){stacks.push(makeVerticalPalletStack(stack.pallets));});
+  });
+
+  stacks.sort(function(a,b){return a.sequence-b.sequence;});
+  return stacks;
+}
+
+function rectsIntersect(a,b){
+  return !(b.x>=a.x+a.w||b.x+b.w<=a.x||b.y>=a.y+a.h||b.y+b.h<=a.y);
+}
+
+function splitFreeRectangles(freeRects,used){
+  var out=[];
+  freeRects.forEach(function(fr){
+    if(!rectsIntersect(fr,used)){out.push(fr);return;}
+    if(used.x>fr.x) out.push({x:fr.x,y:fr.y,w:used.x-fr.x,h:fr.h});
+    if(used.x+used.w<fr.x+fr.w) out.push({x:used.x+used.w,y:fr.y,w:fr.x+fr.w-(used.x+used.w),h:fr.h});
+    if(used.y>fr.y) out.push({x:fr.x,y:fr.y,w:fr.w,h:used.y-fr.y});
+    if(used.y+used.h<fr.y+fr.h) out.push({x:fr.x,y:used.y+used.h,w:fr.w,h:fr.y+fr.h-(used.y+used.h)});
+  });
+  out=out.filter(function(r){return r.w>0.01&&r.h>0.01;});
+  return out.filter(function(r,i){
+    return !out.some(function(o,j){return i!==j&&r.x>=o.x-1e-7&&r.y>=o.y-1e-7&&r.x+r.w<=o.x+o.w+1e-7&&r.y+r.h<=o.y+o.h+1e-7;});
+  });
+}
+
+function packPalletOrder(items,placementMode){
+  var free=[{x:0,y:0,w:C.L,h:C.W}],placements=[],unplaced=[];
+  placementMode=placementMode||'bestFit';
+  items.forEach(function(item){
+    var orientations=[{w:item.pallet.L,h:item.pallet.W,rotated:false}];
+    if(Math.abs(item.pallet.L-item.pallet.W)>1e-7) orientations.push({w:item.pallet.W,h:item.pallet.L,rotated:true});
+    var best=null;
+    free.forEach(function(fr){
+      orientations.forEach(function(o){
+        if(o.w>fr.w+1e-7||o.h>fr.h+1e-7) return;
+        var shortFit=Math.min(fr.w-o.w,fr.h-o.h),longFit=Math.max(fr.w-o.w,fr.h-o.h),areaFit=fr.w*fr.h-o.w*o.h;
+        var candidate={
+          x:fr.x,y:fr.y,w:o.w,h:o.h,rotated:o.rotated,
+          shortFit:shortFit,longFit:longFit,areaFit:areaFit,
+          acrossSlots:Math.floor((fr.h+1e-7)/o.h)
+        };
+        var take=false;
+        if(!best){
+          take=true;
+        }else if(placementMode==='widthFirst'){
+          // Fill all available positions across the trailer width at the current
+          // longitudinal station before advancing farther down the trailer.
+          take=candidate.x<best.x-1e-7||
+            (Math.abs(candidate.x-best.x)<1e-7&&candidate.y<best.y-1e-7)||
+            // At the same longitudinal station, choose the orientation that fits
+            // the greatest number of pallets across the trailer width.
+            (Math.abs(candidate.x-best.x)<1e-7&&Math.abs(candidate.y-best.y)<1e-7&&candidate.acrossSlots>best.acrossSlots)||
+            (Math.abs(candidate.x-best.x)<1e-7&&Math.abs(candidate.y-best.y)<1e-7&&candidate.acrossSlots===best.acrossSlots&&candidate.h<best.h-1e-7)||
+            (Math.abs(candidate.x-best.x)<1e-7&&Math.abs(candidate.y-best.y)<1e-7&&candidate.acrossSlots===best.acrossSlots&&Math.abs(candidate.h-best.h)<1e-7&&candidate.w<best.w-1e-7)||
+            (Math.abs(candidate.x-best.x)<1e-7&&Math.abs(candidate.y-best.y)<1e-7&&candidate.acrossSlots===best.acrossSlots&&Math.abs(candidate.h-best.h)<1e-7&&Math.abs(candidate.w-best.w)<1e-7&&candidate.shortFit<best.shortFit-1e-7);
+        }else{
+          take=candidate.shortFit<best.shortFit-1e-7||
+            (Math.abs(candidate.shortFit-best.shortFit)<1e-7&&candidate.longFit<best.longFit-1e-7)||
+            (Math.abs(candidate.shortFit-best.shortFit)<1e-7&&Math.abs(candidate.longFit-best.longFit)<1e-7&&candidate.areaFit<best.areaFit-1e-7)||
+            (Math.abs(candidate.shortFit-best.shortFit)<1e-7&&Math.abs(candidate.longFit-best.longFit)<1e-7&&Math.abs(candidate.areaFit-best.areaFit)<1e-7&&(candidate.x<best.x-1e-7||(Math.abs(candidate.x-best.x)<1e-7&&candidate.y<best.y)));
+        }
+        if(take) best=candidate;
+      });
+    });
+    if(!best){unplaced.push(item);return;}
+    var placed={x:best.x,y:best.y,w:best.w,h:best.h,rotated:best.rotated,pattern:item};
+    placements.push(placed);
+    free=splitFreeRectangles(free,placed);
+  });
+  return {placements:placements,unplaced:unplaced};
+}
+
+function scorePackedResult(result){
+  var boxVolume=result.placements.reduce(function(s,p){return s+p.pattern.boxVolume;},0);
+  var boxes=result.placements.reduce(function(s,p){return s+p.pattern.boxCount;},0);
+  var count=result.placements.length;
+  var maxX=result.placements.reduce(function(m,p){return Math.max(m,p.x+p.w);},0);
+  var maxY=result.placements.reduce(function(m,p){return Math.max(m,p.y+p.h);},0);
+  return {boxVolume:boxVolume,boxes:boxes,count:count,maxX:maxX,maxY:maxY,extent:maxX*maxY};
+}
+
+function optimizePalletPlacement(pallets){
+  var orders=[];
+  orders.push(pallets.slice().sort(function(a,b){return b.pallet.L*b.pallet.W-a.pallet.L*a.pallet.W||b.boxVolume-a.boxVolume;}));
+  orders.push(pallets.slice().sort(function(a,b){return b.boxVolume-a.boxVolume||b.pallet.L*b.pallet.W-a.pallet.L*a.pallet.W;}));
+  orders.push(pallets.slice().sort(function(a,b){return Math.max(b.pallet.L,b.pallet.W)-Math.max(a.pallet.L,a.pallet.W)||b.boxVolume-a.boxVolume;}));
+  orders.push(pallets.slice().sort(function(a,b){return (b.boxVolume/(b.pallet.L*b.pallet.W))-(a.boxVolume/(a.pallet.L*a.pallet.W));}));
+  orders.push(pallets.slice());
+  var best={placements:[],unplaced:pallets.slice()},bestScore=scorePackedResult(best);
+  orders.forEach(function(order){
+    ['bestFit','widthFirst'].forEach(function(mode){
+      var result=packPalletOrder(order,mode),score=scorePackedResult(result);
+      if(score.boxVolume>bestScore.boxVolume+1e-7||
+        (Math.abs(score.boxVolume-bestScore.boxVolume)<1e-7&&score.boxes>bestScore.boxes)||
+        (Math.abs(score.boxVolume-bestScore.boxVolume)<1e-7&&score.boxes===bestScore.boxes&&score.count>bestScore.count)||
+        // At equal fill, use the trailer width before consuming more length.
+        (Math.abs(score.boxVolume-bestScore.boxVolume)<1e-7&&score.boxes===bestScore.boxes&&score.count===bestScore.count&&score.maxX<bestScore.maxX-1e-7)||
+        (Math.abs(score.boxVolume-bestScore.boxVolume)<1e-7&&score.boxes===bestScore.boxes&&score.count===bestScore.count&&Math.abs(score.maxX-bestScore.maxX)<1e-7&&score.extent<bestScore.extent-1e-7)||
+        (Math.abs(score.boxVolume-bestScore.boxVolume)<1e-7&&score.boxes===bestScore.boxes&&score.count===bestScore.count&&Math.abs(score.maxX-bestScore.maxX)<1e-7&&Math.abs(score.extent-bestScore.extent)<1e-7&&score.maxY>bestScore.maxY+1e-7)){
+        best=result;bestScore=score;
+      }
+    });
+  });
+  best.placements.sort(function(a,b){return a.x-b.x||a.y-b.y;});
+  return best;
+}
+
+function centerMultiPlacements(placements){
+  if(!placements.length) return placements;
+  var minX=Math.min.apply(null,placements.map(function(p){return p.x;}));
+  var minY=Math.min.apply(null,placements.map(function(p){return p.y;}));
+  var maxY=Math.max.apply(null,placements.map(function(p){return p.y+p.h;}));
+  var spanY=maxY-minY;
+  // Preserve rear-to-front loading: normalize the packed group to x = 0 and
+  // center it only across the transport-unit width.
+  var dx=-minX;
+  var dy=(C.W-spanY)/2-minY;
+  placements.forEach(function(p){p.x+=dx;p.y+=dy;});
+  return placements;
+}
+
+function buildMultiPlan(){
+  var parts=validMultiParts();
+  var requested=requestedMultiPallets(parts);
+  var stacks=groupPalletsIntoVerticalStacks(requested);
+  var packed=optimizePalletPlacement(stacks);
+  centerMultiPlacements(packed.placements);
+  var totalPallets=packed.placements.reduce(function(s,p){return s+p.pattern.pallets.length;},0);
+  return {parts:parts,requested:requested,stacks:stacks,placements:packed.placements,unplaced:packed.unplaced,totalPallets:totalPallets};
+}
+
+function drawMultiBox(rx,ry,bz,boxX,boxY,boxH,partIndex){
+  var x0=rx,x1=rx+boxX,y0=ry,y1=ry+boxY,z1=bz+boxH;
+  var ek=dark?'rgba(255,255,255,0.30)':'rgba(0,0,0,0.36)',ew=.8*S,c=multiColor(partIndex);
+  face([pt(x0,y0,z1),pt(x1,y0,z1),pt(x1,y1,z1),pt(x0,y1,z1)],c.top,ek,ew);
+  face([pt(x0,y1,bz),pt(x1,y1,bz),pt(x1,y1,z1),pt(x0,y1,z1)],c.side,ek,ew);
+  face([pt(x1,y0,bz),pt(x1,y1,bz),pt(x1,y1,z1),pt(x1,y0,z1)],c.end,ek,ew);
+  if(isAesthetic()){
+    var tape=dark?'rgba(245,230,185,.72)':'rgba(255,239,188,.86)',mx=(x0+x1)/2;
+    ln(pt(mx,y0,z1+.04),pt(mx,y1,z1+.04),tape,Math.max(.65,1.05*S));
+    drawBoxShippingLabel(x1,y0,y1,bz,boxY,boxH);
+  }
+}
+
+function drawPalletForPattern(rx,ry,bz,pattern,rotated){
+  var oldPL=PL,oldPW=PW,oldPH=PH,oldMat=PALLET_MATERIAL;
+  PL=rotated?pattern.pallet.W:pattern.pallet.L;
+  PW=rotated?pattern.pallet.L:pattern.pallet.W;
+  PH=pattern.pallet.H;
+  PALLET_MATERIAL=pattern.pallet.material;
+  drawPallet(rx,ry,bz);
+  PL=oldPL;PW=oldPW;PH=oldPH;PALLET_MATERIAL=oldMat;
+}
+
+function transformedBoxPlacement(place,layout,xi,yi){
+  var lx=(layout.offsetX||0)+xi*layout.boxX;
+  var ly=(layout.offsetY||0)+yi*layout.boxY;
+  if(!place.rotated) return {x:place.x+lx,y:place.y+ly,w:layout.boxX,h:layout.boxY};
+  return {
+    x:place.x+place.pattern.pallet.W-(ly+layout.boxY),
+    y:place.y+lx,
+    w:layout.boxY,h:layout.boxX
+  };
+}
+
+function selectVisibleMultiPallets(M,n){
+  var remaining=Math.max(0,Math.min(n,M.totalPallets||0)),selected=[];
+  M.placements.forEach(function(place){
+    if(remaining<=0) return;
+    var count=Math.min(remaining,place.pattern.pallets.length);
+    if(count>0) selected.push({place:place,count:count});
+    remaining-=count;
+  });
+  return selected;
+}
+
+function selectedMultiTotals(M,n){
+  var boxes={},parts={},pallets={};
+  M.parts.forEach(function(p){boxes[p.index]=0;parts[p.index]=0;pallets[p.index]=0;});
+  selectVisibleMultiPallets(M,n).forEach(function(selected){
+    selected.place.pattern.pallets.slice(0,selected.count).forEach(function(pattern){
+      var p=pattern.part;
+      boxes[p.index]+=pattern.boxCount;
+      parts[p.index]+=pattern.partsCount;
+      pallets[p.index]++;
+    });
+  });
+  return {boxes:boxes,parts:parts,pallets:pallets};
+}
+
+function drawMulti(n){
+  updateEquipmentBadge();
+  var M=buildMultiPlan();
+  updateMultiLegend(M.parts);
+  var viewport=byId('canvasViewport'),endViewFit=VIEW_ORIENTATION==='front'||VIEW_ORIENTATION==='rear',PAD=endViewFit?72:(isAesthetic()?(isFlatbed()?150:140):90),SCALE_PAD=90;
+  var viewportWidth=viewport&&viewport.clientWidth?viewport.clientWidth:700;
+  var REF=isVisualizationFullscreen()?Math.max(900,Math.min(1400,viewportWidth-40)):Math.max(320,Math.min(1000,viewportWidth-30));
+  updateProjectionBasis();
+  S=baseScaleForView(REF,viewport,SCALE_PAD)*ZOOM;
+  var bounds=projectedContainerBounds();
+  var minX=bounds.minX*S,maxX=bounds.maxX*S,minY=bounds.minY*S,maxY=bounds.maxY*S;
+  var CW=Math.round(maxX-minX+PAD*2),CH=Math.round(maxY-minY+PAD*2);
+  canvas.width=CW;canvas.height=CH;canvas.style.width='';canvas.style.height='';
+  var freeX=viewport?Math.max(0,viewport.clientWidth-CW):0,freeY=viewport?Math.max(0,viewport.clientHeight-CH):0;
+  canvas.style.marginLeft=Math.round(freeX/2)+'px';canvas.style.marginTop=Math.round(freeY/2)+'px';canvas.style.marginRight='0';canvas.style.marginBottom='0';
+  ctx.clearRect(0,0,CW,CH);OX=-minX+PAD;OY=-minY+PAD;
+  var total=Math.max(0,Math.min(n,M.totalPallets||0)),visible=selectVisibleMultiPallets(M,total);
+  visible.sort(function(a,b){
+    var da=viewDrawDepth(a.place.x,a.place.y,0),db=viewDrawDepth(b.place.x,b.place.y,0);
+    return da-db;
+  });
+  drawContainerBack();
+  visible.forEach(function(selected){
+    var place=selected.place,baseZ=0;
+    place.pattern.pallets.slice(0,selected.count).forEach(function(pattern){
+      var boxDraws=[];
+      drawPalletForPattern(place.x,place.y,baseZ,pattern,place.rotated);
+      pattern.layers.forEach(function(layer){
+        var drawn=0,layout=layer.layout,z=baseZ+pattern.pallet.H+layer.z;
+        for(var yi=0;yi<layout.nY&&drawn<layer.count;yi++){
+          for(var xi=0;xi<layout.nX&&drawn<layer.count;xi++){
+            var bp=transformedBoxPlacement(place,layout,xi,yi);
+            boxDraws.push({
+              x:bp.x,y:bp.y,w:bp.w,h:bp.h,z:z,boxH:layer.part.H,partIndex:layer.part.index,
+              depth:viewDrawDepth(bp.x+bp.w*0.5,bp.y+bp.h*0.5,z)
+            });
+            drawn++;
+          }
+        }
+      });
+      boxDraws.sort(function(a,b){return a.depth-b.depth||a.z-b.z||a.y-b.y||a.x-b.x;});
+      boxDraws.forEach(function(b){drawMultiBox(b.x,b.y,b.z,b.w,b.h,b.boxH,b.partIndex);});
+      baseZ+=pattern.height;
+    });
+  });
+  drawContainerFront();
+  drawMultiDimensions();
+  updateMultiResults(M,total,visible);
+}
+
+function drawMultiDimensions(){
+  var fs=Math.max(11,Math.round(11*S/.9));
+  var tc=dark?'rgba(235,235,230,.96)':'rgba(30,30,42,.96)';
+  var lc=dark?'rgba(210,210,205,.58)':'rgba(45,45,65,.66)';
+  function d(a,b,label,offset,containerCenter){
+    var dx=b.x-a.x,dy=b.y-a.y,nx=-dy,ny=dx,nd=Math.sqrt(nx*nx+ny*ny)||1;nx/=nd;ny/=nd;
+    var mx0=(a.x+b.x)/2,my0=(a.y+b.y)/2;
+    if(((mx0+nx)-containerCenter.x)*nx+((my0+ny)-containerCenter.y)*ny<0){nx=-nx;ny=-ny;}
+    var ax=a.x+nx*offset,ay=a.y+ny*offset,bx=b.x+nx*offset,by=b.y+ny*offset,tickLength=5;
+    ctx.save();ctx.strokeStyle=lc;ctx.lineWidth=1.2;ctx.setLineDash([4,4]);
+    ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);ctx.stroke();ctx.setLineDash([]);ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(ax-nx*tickLength,ay-ny*tickLength);ctx.lineTo(ax+nx*tickLength,ay+ny*tickLength);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(bx-nx*tickLength,by-ny*tickLength);ctx.lineTo(bx+nx*tickLength,by+ny*tickLength);ctx.stroke();
+    ctx.font='600 '+fs+'px \'Barlow Semi Condensed\',-apple-system,sans-serif';var mx=(ax+bx)/2,my=(ay+by)/2,tw=ctx.measureText(label).width;
+    ctx.fillStyle=dark?'rgba(19,32,44,.94)':'rgba(243,245,246,.96)';roundedRectPath(mx-tw/2-6,my-fs/2-5,tw+12,fs+10,4);ctx.fill();
+    ctx.fillStyle=tc;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,mx,my);ctx.restore();
+  }
+  var dimFloorZ=isFlatbed()?Math.min(4,Math.max(2,PH*.8)):0,center=pt(C.L/2,C.W/2,(dimFloorZ+C.H)/2);
+  if(VIEW_ORIENTATION==='isometric' || VIEW_ORIENTATION==='top' || VIEW_ORIENTATION==='side')
+    d(pt(0,C.W,dimFloorZ),pt(C.L,C.W,dimFloorZ),C.L+'″ L',30,center);
+  if(VIEW_ORIENTATION==='isometric' || VIEW_ORIENTATION==='top' || VIEW_ORIENTATION==='front' || VIEW_ORIENTATION==='rear'){
+    var widthAnchorX=VIEW_ORIENTATION==='front'?0:C.L;
+    var flatbedEndWidthDim=isAesthetic() && isFlatbed() && (VIEW_ORIENTATION==='front' || VIEW_ORIENTATION==='rear');
+    var widthDimZ=flatbedEndWidthDim?C.H:dimFloorZ;
+    var widthDimOffset=flatbedEndWidthDim?30:42;
+    d(pt(widthAnchorX,0,widthDimZ),pt(widthAnchorX,C.W,widthDimZ),C.W+'″ W',widthDimOffset,center);
+  }
+  if(VIEW_ORIENTATION==='isometric' || VIEW_ORIENTATION==='side' || VIEW_ORIENTATION==='front' || VIEW_ORIENTATION==='rear'){
+    var heightAnchorX=VIEW_ORIENTATION==='rear'?C.L:0;
+    d(pt(heightAnchorX,C.W,dimFloorZ),pt(heightAnchorX,C.W,C.H),C.H+'″ H',44,center);
+  }
+}
+
+function countPlacementRows(placements){
+  var ys=[];
+  placements.forEach(function(p){if(!ys.some(function(y){return Math.abs(y-p.y)<1;})) ys.push(p.y);});
+  return ys.length;
+}
+
+function updateMultiResults(M,total,visible){
+  var totals=selectedMultiTotals(M,total),totalBoxes=0,boxVol=0,palletVol=0,totalWeightKg=0,knownWeightKg=0,missingWeightNames=[];
+  M.parts.forEach(function(p){
+    var partCount=totals.parts[p.index]||0;
+    totalBoxes+=totals.boxes[p.index]||0;
+    boxVol+=(totals.boxes[p.index]||0)*p.boxVolume;
+    if(partCount>0){
+      if(p.partWeightKg>0){ knownWeightKg+=partCount*p.partWeightKg; }
+      else missingWeightNames.push(p.name);
+    }
+  });
+  var completeWeightData=missingWeightNames.length===0 && M.parts.some(function(p){return (totals.parts[p.index]||0)>0 && p.partWeightKg>0;});
+  if(completeWeightData) totalWeightKg=knownWeightKg;
+  visible.forEach(function(selected){selected.place.pattern.pallets.slice(0,selected.count).forEach(function(p){palletVol+=p.palletVolume;});});
+  var used=(boxVol+palletVol)/1728,fill=C.Vu>0?Math.round(used/C.Vu*100):0;
+  byId('statRows').textContent=countPlacementRows(visible.map(function(v){return v.place;}));
+  byId('statTotalPallets').textContent=total+' / '+M.totalPallets;byId('statTotalPalletsNote').textContent='loaded / optimized maximum';
+  byId('statPal').textContent=total+' / '+M.totalPallets;byId('statPalNote').textContent='occupied / available plan';
+  byId('statBpp').textContent=total?Math.round(totalBoxes/total):0;byId('statBppNote').textContent='average boxes / pallet';
+  byId('statBoxes').textContent=totalBoxes;
+  var partLines=M.parts.map(function(p){return safeText(p.name)+': '+(totals.parts[p.index]||0);});
+  byId('statParts').classList.add('multi-part-total');
+  byId('statParts').innerHTML=partLines.join('<br>')||'—';
+  byId('statPartsNote').textContent='';
+  byId('statVolU').textContent=used.toFixed(1)+' ft³';byId('statFill').textContent=fill+'%';
+  byId('statWeight').textContent=(completeWeightData||knownWeightKg>0)?formatKg(knownWeightKg):'\u2014';
+  byId('statWeightNote').textContent=completeWeightData?'parts only':(knownWeightKg>0?'partial · missing '+missingWeightNames.join(', '):'part weights not set');
+  byId('statWeightFill').textContent=completeWeightData?weightFillPercent(totalWeightKg)+'%':'\u2014';
+  byId('statWeightFillNote').textContent=completeWeightData?'20,200 kg max':(missingWeightNames.length?'enter all loaded part weights':'20,200 kg max');
+  var pi=byId('packingInfo');pi.style.display='block';pi.textContent='Exact quantities · fill-rate optimized · one part type per pallet';
+  var summary=M.parts.map(function(p){
+    var requested=p.basis==='parts'?Math.ceil(p.target):Math.ceil(p.target)*p.partsPerBox;
+    return '<strong>'+safeText(p.name)+':</strong> '+(totals.parts[p.index]||0)+' / '+requested+' parts · '+(totals.boxes[p.index]||0)+' boxes · '+(totals.pallets[p.index]||0)+' pallet'+((totals.pallets[p.index]||0)===1?'':'s')+' · '+safeText(p.pallet.label)+(p.partWeight>0?' · '+p.partWeight+' '+p.weightUnit+'/part':'')+(p.maxLayersLimit>0?' · max '+p.maxLayers+' layers':'')+' · '+(p.noPalletStack?'not stackable':'stackable');
+  }).join('<br>');
+  byId('multiPlanSummary').innerHTML=summary||'No valid box and pallet configuration fits in the selected transport.';
+  byId('constraintGrid').innerHTML='<div class="constraint-item"><span>Demand mode</span><strong>Exact quantities</strong></div><div class="constraint-item"><span>Optimization</span><strong>Maximum fill rate</strong></div><div class="constraint-item"><span>Pallet mixing</span><strong>Not allowed</strong></div><div class="constraint-item"><span>Vertical pallet stacking</span><strong>Controlled per part</strong></div>'+
+    M.parts.map(function(p){return '<div class="constraint-item"><span>'+safeText(p.name)+' pallet</span><strong>'+safeText(p.pallet.label)+' · '+p.pallet.L+'″ × '+p.pallet.W+'″ × '+p.pallet.H+'″</strong></div>';}).join('');
+  var warnings=[];
+  if(M.parts.length<2) warnings.push('Add at least two valid part types for the multiple-parts mode.');
+  MULTI_PARTS.forEach(function(raw){if(!M.parts.some(function(p){return p.id===raw.id;})) warnings.push((raw.name||'A part type')+' does not fit on its selected pallet or exceeds the usable height.');});
+  if(M.unplaced.length){
+    var missed={};
+    M.unplaced.forEach(function(stack){
+      stack.pallets.forEach(function(pattern){var name=pattern.part.name;missed[name]=(missed[name]||0)+pattern.boxCount;});
+    });
+    Object.keys(missed).forEach(function(name){warnings.push(name+': '+missed[name]+' requested boxes do not fit in the selected transport.');});
+  }
+  M.parts.forEach(function(p){
+    if(p.basis==='parts'&&p.targetBoxes*p.partsPerBox>p.target) warnings.push(p.name+': exact part demand requires full boxes, so the load contains '+(p.targetBoxes*p.partsPerBox)+' parts for a request of '+Math.ceil(p.target)+'.');
+  });
+  if(knownWeightKg>MAX_PAYLOAD_KG) warnings.push('Weight limit exceeded: at least '+formatKg(knownWeightKg)+' loaded vs '+MAX_PAYLOAD_KG.toLocaleString()+' kg maximum.');
+  var warn=byId('warnDims');if(warnings.length){warn.innerHTML=warningList(warnings);warn.style.display='block';}else{warn.innerHTML='';warn.style.display='none';}
+  byId('infoGrid').innerHTML='<div class="info-block"><dt>Container</dt><dd>'+C.name+'</dd></div><div class="info-block"><dt>Mode</dt><dd>Multiple parts</dd></div><div class="info-block"><dt>Optimization</dt><dd>Volume fill rate</dd></div><div class="info-block"><dt>Maximum payload</dt><dd>'+MAX_PAYLOAD_KG.toLocaleString()+' kg</dd></div><div class="info-block"><dt>Selected pallets</dt><dd>'+total+' / '+M.totalPallets+'</dd></div><div class="info-block"><dt>Total boxes</dt><dd>'+totalBoxes+'</dd></div>'+
+    M.parts.map(function(p){var requested=p.basis==='parts'?Math.ceil(p.target):Math.ceil(p.target)*p.partsPerBox;return '<div class="info-block"><dt>'+safeText(p.name)+'</dt><dd>'+(totals.parts[p.index]||0)+' / '+requested+' parts · '+(totals.boxes[p.index]||0)+' boxes · '+safeText(p.pallet.label)+(p.partWeight>0?' · '+p.partWeight+' '+p.weightUnit+'/part':'')+'</dd></div>';}).join('');
+}
+
+function strategyName(){return 'Exact quantities';}
+
+function updateMultiLegend(parts){
+  var odd=byId('boxLegendOdd'),even=byId('boxLegendEven');
+  document.querySelectorAll('.multi-part-legend').forEach(function(e){e.remove();});
+  if(!parts.length){odd.classList.remove('hidden');even.classList.add('hidden');byId('boxLegendOddLabel').textContent='Boxes';return;}
+  [odd,even].forEach(function(el,i){if(i<parts.length){el.classList.remove('hidden');el.querySelector('.legend-swatch').style.background=multiColor(parts[i].index).top;el.querySelector('span').textContent=parts[i].name;}else el.classList.add('hidden');});
+  var legend=document.querySelector('.legend');
+  parts.slice(2).forEach(function(p){var item=document.createElement('div');item.className='legend-item multi-part-legend';item.innerHTML='<div class="legend-swatch" style="background:'+multiColor(p.index).top+'"></div><span>'+safeText(p.name)+'</span>';legend.insertBefore(item,byId('equipmentBadge'));});
+}
+
+var drawSinglePart=draw;
+draw=function(n){ if(isMultiMode()) return drawMulti(n); return drawSinglePart(n); };
+var updateSliderSingle=updateSlider;
+updateSlider=function(){
+  if(!isMultiMode()) return updateSliderSingle();
+  var M=buildMultiPlan(),slider=byId('slider'),max=M.totalPallets;
+  slider.max=Math.max(0,max);slider.value=max;byId('sliderVal').textContent=slider.value;return +slider.value;
+};
+var updateBoxLegendSingle=updateBoxLegend;
+updateBoxLegend=function(L){ if(isMultiMode()) return updateMultiLegend(validMultiParts()); return updateBoxLegendSingle(L); };
+
+var collectStateSingle=collectState;
+collectState=function(){var s=collectStateSingle();s.loadMode=LOAD_MODE;s.multi={parts:MULTI_PARTS};return s;};
+var loadSavedStateSingle=loadSavedState;
+loadSavedState=function(){
+  var ok=loadSavedStateSingle(),raw=storageGet(STORAGE_KEY),s=null;try{s=raw?JSON.parse(raw):null;}catch(e){}
+  if(s){
+    LOAD_MODE=s.loadMode==='multi'?'multi':'single';
+    if(s.multi&&Array.isArray(s.multi.parts)&&s.multi.parts.length>=2){
+      MULTI_PARTS=s.multi.parts.map(function(p){
+        return {id:p.id,name:p.name,L:p.L,W:p.W,H:p.H,partsPerBox:p.partsPerBox,partWeight:p.partWeight!==undefined?p.partWeight:'',weightUnit:p.weightUnit==='lb'?'lb':'kg',basis:p.basis,target:p.target,palletType:PALLET_PRESETS[p.palletType]?p.palletType:'wood',maxLayersLimit:p.maxLayersLimit!==undefined?p.maxLayersLimit:'',noPalletStack:!!p.noPalletStack};
+      });
+    }
+  }
+  MULTI_STRATEGY='exact';MULTI_OBJECTIVE='volume';ALLOW_MIXED_PALLETS=false;MULTI_AUTO_STACK=true;
+  updateLoadModeUI();draw(updateSlider());return ok;
+};
+var resetToDefaultsSingle=resetToDefaults;
+resetToDefaults=function(){
+  resetToDefaultsSingle();LOAD_MODE='single';MULTI_STRATEGY='exact';MULTI_OBJECTIVE='volume';ALLOW_MIXED_PALLETS=false;MULTI_AUTO_STACK=true;MULTI_PART_SEQ=3;
+  MULTI_PARTS=[{id:'part1',name:'Part A',L:24,W:18,H:12,partsPerBox:8,partWeight:'',weightUnit:'kg',basis:'parts',target:320,palletType:'wood',maxLayersLimit:'',noPalletStack:false},{id:'part2',name:'Part B',L:16,W:14,H:10,partsPerBox:20,partWeight:'',weightUnit:'kg',basis:'parts',target:200,palletType:'wood',maxLayersLimit:'',noPalletStack:false}];
+  updateLoadModeUI();draw(updateSlider());saveState();
+};
+
+byId('singleModeTab').addEventListener('click',function(){setLoadMode('single');});
+byId('multiModeTab').addEventListener('click',function(){setLoadMode('multi');});
+byId('addMultiPart').addEventListener('click',function(){
+  readMultiRows();var id='part'+(MULTI_PART_SEQ++);
+  MULTI_PARTS.push({id:id,name:'Part '+String.fromCharCode(64+Math.min(26,MULTI_PARTS.length+1)),L:20,W:16,H:12,partsPerBox:10,partWeight:'',weightUnit:'kg',basis:'parts',target:100,palletType:'wood',maxLayersLimit:'',noPalletStack:false});
+  renderMultiParts();draw(updateSlider());saveState();
+});
+byId('multiPartsList').addEventListener('click',function(e){
+  var btn=e.target.closest('[data-action="remove"]');if(!btn||MULTI_PARTS.length<=2)return;
+  var row=btn.closest('.multi-part-row'),id=row.getAttribute('data-id');MULTI_PARTS=MULTI_PARTS.filter(function(p){return p.id!==id;});
+  renderMultiParts();draw(updateSlider());saveState();
+});
+var scheduleMultiUpdate=debounce(function(){readMultiRows();draw(updateSlider());saveState();},180);
+byId('multiPartsList').addEventListener('input',scheduleMultiUpdate);
+byId('multiPartsList').addEventListener('change',scheduleMultiUpdate);
+updateLoadModeUI();
+
+// ── Events ────────────────────────────────────────────────────────────────────
+document.getElementById('containerPreset').addEventListener('change',function(){
+  var key=this.value;
+  if(PRESETS[key]){
+    var p=PRESETS[key];
+    fillPresetFields(p);
+    applyContainerInputs({name:p.name,type:p.type||'enclosed',kind:p.kind||'custom',center:true});
+  } else {
+    document.getElementById('presetBadge').textContent='';
+  }
+});
+
+CONTAINER_INPUT_IDS.forEach(function(id){
+  document.getElementById(id).addEventListener('input',function(){
+    document.getElementById('containerPreset').value='custom';
+    document.getElementById('presetBadge').textContent='';
+    if(id==='cL'||id==='cW'||id==='cH') updateDerived();
+    scheduleContainerUpdate();
+  });
+});
+
+(function(){
+  var picker=document.getElementById('palletPresetPicker');
+  var button=document.getElementById('palletPresetButton');
+  var native=document.getElementById('palletPreset');
+  if(!picker||!button||!native) return;
+  var options=Array.prototype.slice.call(picker.querySelectorAll('.custom-select-option'));
+  function closePicker(){ picker.classList.remove('open'); button.setAttribute('aria-expanded','false'); }
+  function openPicker(){ picker.classList.add('open'); button.setAttribute('aria-expanded','true'); }
+  function focusSelectedOption(){
+    var selected=picker.querySelector('.custom-select-option.selected') || options[0];
+    if(selected) selected.focus();
+  }
+  function chooseOption(opt){
+    native.value=opt.getAttribute('data-value');
+    native.dispatchEvent(new Event('change'));
+    closePicker();
+    button.focus();
+  }
+  button.addEventListener('click',function(e){
+    e.stopPropagation();
+    picker.classList.contains('open') ? closePicker() : openPicker();
+  });
+  button.addEventListener('keydown',function(e){
+    if(e.key==='ArrowDown' || e.key==='Enter' || e.key===' '){
+      e.preventDefault();
+      openPicker();
+      focusSelectedOption();
+    } else if(e.key==='Escape') {
+      closePicker();
+    }
+  });
+  options.forEach(function(opt,idx){
+    opt.addEventListener('click',function(e){
+      e.stopPropagation();
+      chooseOption(this);
+    });
+    opt.addEventListener('keydown',function(e){
+      if(e.key==='ArrowDown'){
+        e.preventDefault();
+        (options[idx+1] || options[0]).focus();
+      } else if(e.key==='ArrowUp'){
+        e.preventDefault();
+        (options[idx-1] || options[options.length-1]).focus();
+      } else if(e.key==='Enter' || e.key===' '){
+        e.preventDefault();
+        chooseOption(this);
+      } else if(e.key==='Escape'){
+        closePicker();
+        button.focus();
+      }
+    });
+  });
+  document.addEventListener('click',closePicker);
+})();
+
+document.getElementById('palletPreset').addEventListener('change',function(){
+  applyPalletPreset(this.value);
+  applyDimensionInputs({center:true});
+});
+
+DIMENSION_INPUT_IDS.forEach(function(id){
+  document.getElementById(id).addEventListener('input',function(){
+    if(id==='dPL'||id==='dPW'||id==='dPH'){
+      var preset=document.getElementById('palletPreset');
+      if(preset && preset.value!=='custom') return;
+    }
+    scheduleDimensionUpdate();
+  });
+});
+
+document.getElementById('dWeightUnit').addEventListener('change',function(){
+  scheduleDimensionUpdate();
+});
+
+document.getElementById('themeToggle').addEventListener('click',function(){
+  var nextTheme = dark ? 'light' : 'dark';
+  applyTheme(nextTheme);
+  storeTheme(nextTheme);
+  draw(+document.getElementById('slider').value);
+  saveState();
+});
+
+document.getElementById('containerDimsToggle').addEventListener('click',function(){
+  document.getElementById('containerDimsToggle').classList.toggle('open');
+  document.getElementById('containerDimsBody').classList.toggle('open');
+  saveState();
+});
+
+document.getElementById('dimsToggle').addEventListener('click',function(){
+  document.getElementById('dimsToggle').classList.toggle('open');
+  document.getElementById('dimsBody').classList.toggle('open');
+  saveState();
+});
+
+document.getElementById('slider').addEventListener('input',function(){
+  document.getElementById('sliderVal').textContent=this.value;
+  draw(+this.value);
+  saveState();
+});
+
+document.getElementById('zoomSlider').addEventListener('input',function(){
+  setZoomPercent(this.value,{preserveFocus:true});
+});
+
+document.querySelectorAll('.view-tab').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    var next=this.getAttribute('data-view');
+    if(['isometric','top','side','front','rear'].indexOf(next)<0 || next===VIEW_ORIENTATION) return;
+    VIEW_ORIENTATION=next;
+    updateProjectionBasis();
+    updateViewOrientationButtons();
+    draw(+document.getElementById('slider').value);
+    centerViewport();
+    saveState();
+  });
+});
+
+document.getElementById('viewStyleToggle').addEventListener('click',function(){
+  VIEW_STYLE = isAesthetic() ? 'schematic' : 'aesthetic';
+  updateViewStyleButton();
+  draw(+document.getElementById('slider').value);
+  centerViewport();
+  saveState();
+});
+
+document.getElementById('fullscreenToggle').addEventListener('click',function(){
+  toggleVisualizationFullscreen();
+});
+
+['fullscreenchange','webkitfullscreenchange'].forEach(function(eventName){
+  document.addEventListener(eventName,function(){
+    if(!browserFullscreenElement()) disableFullscreenFallback();
+    syncFullscreenButton();
+    requestAnimationFrame(function(){
+      draw(+document.getElementById('slider').value);
+      centerViewport();
+    });
+  });
+});
+
+window.addEventListener('keydown',function(e){
+  if(e.key==='Escape' && visualizationCard() && visualizationCard().classList.contains('fullscreen-fallback')){
+    disableFullscreenFallback();
+    syncFullscreenButton();
+    draw(+document.getElementById('slider').value);
+    centerViewport();
+  }
+});
+
+document.getElementById('resetView').addEventListener('click',function(){
+  setZoomPercent(100,{center:true});
+});
+
+document.getElementById('resetDefaults').addEventListener('click',function(){
+  resetToDefaults();
+});
+
+// ── Pan by drag ───────────────────────────────────────────────────────────────
+(function(){
+  var vp = document.getElementById('canvasViewport');
+  var dragging=false, startX=0, startY=0, scrollX=0, scrollY=0;
+  vp.addEventListener('mousedown',function(e){
+    dragging=true; startX=e.clientX; startY=e.clientY;
+    scrollX=vp.scrollLeft; scrollY=vp.scrollTop;
+    vp.style.cursor='grabbing'; e.preventDefault();
+  });
+  window.addEventListener('mousemove',function(e){
+    if(!dragging) return;
+    vp.scrollLeft = scrollX-(e.clientX-startX);
+    vp.scrollTop  = scrollY-(e.clientY-startY);
+  });
+  window.addEventListener('mouseup',function(){
+    dragging=false; vp.style.cursor='grab';
+  });
+
+  // Trackpad behavior matches a regular web page:
+  // - two-finger scrolling moves the page, not the visualizer's internal scroll area;
+  // - a trackpad pinch is exposed by browsers as a ctrlKey wheel event and zooms only this visualizer.
+  vp.addEventListener('wheel',function(e){
+    if(!e.ctrlKey){
+      e.preventDefault();
+      var unit=e.deltaMode===1 ? 18 : (e.deltaMode===2 ? window.innerHeight : 1);
+      window.scrollBy(0,e.deltaY*unit);
+      return;
+    }
+
+    e.preventDefault();
+    var current = +document.getElementById('zoomSlider').value || 100;
+    var factor = Math.exp(-e.deltaY * 0.012);
+    factor = clamp(factor,.86,1.16);
+    setZoomPercent(current * factor,{
+      preserveFocus:true,
+      clientX:e.clientX,
+      clientY:e.clientY
+    });
+  },{passive:false});
+
+  // Touch support
+  vp.addEventListener('touchstart',function(e){
+    if(e.touches.length!==1) return;
+    dragging=true; startX=e.touches[0].clientX; startY=e.touches[0].clientY;
+    scrollX=vp.scrollLeft; scrollY=vp.scrollTop;
+  },{passive:true});
+  vp.addEventListener('touchmove',function(e){
+    if(!dragging||e.touches.length!==1) return;
+    vp.scrollLeft = scrollX-(e.touches[0].clientX-startX);
+    vp.scrollTop  = scrollY-(e.touches[0].clientY-startY);
+  },{passive:true});
+  vp.addEventListener('touchend',function(){ dragging=false; });
+})();
+
+window.addEventListener('resize',function(){
+  draw(+document.getElementById('slider').value);
+  centerViewport();
+});
+
+
+// ── Workbench extensions ────────────────────────────────────────────────────
+var SCENARIO_KEY = "tlsScenariosV1";
+var EMPTY_KEY = "tlsShowEmptyV1";
+var lastDeletedScenario = null;
+var toastTimer = null;
+var LAST_M = null;
+var playTimer = null;
+var SHORT_NAMES = { trailer48:["Trailer","48'"], trailer53:["Trailer","53'"], sea20std:["Sea container","20' STD"], sea40std:["Sea container","40' STD"], sea40hc:["Sea container","40' HC"], sea45hc:["Sea container","45' HC"], flatbed48:["Flatbed","48'"], flatbed53:["Flatbed","53'"], intermodal53:["Intermodal","53'"] };
+
+var SHOW_EMPTY = storageGet(EMPTY_KEY) !== '0';
+function fmtInt(n){ return (Math.round(+n||0)).toLocaleString(); }
+function percentFrom(el){ var t=(el&&el.textContent)||''; var m=t.match(/(-?\d+(?:\.\d+)?)\s*%/); return m ? +m[1] : null; }
+function plural(n,word,many){ return fmtInt(n)+' '+(n===1?word:(many||word+'s')); }
+function endNames(){ return isFlatbed() ? ['Front','Rear'] : ['Front wall','Doors']; }
+
+function showToast(text,actionLabel,action){
+  var t=byId('toast'), tt=byId('toastText'), btn=byId('toastAction');
+  if(!t) return;
+  tt.textContent=text;
+  if(actionLabel && action){ btn.textContent=actionLabel; btn.classList.remove('hidden'); btn.onclick=function(){ action(); hideToast(); }; }
+  else { btn.classList.add('hidden'); btn.onclick=null; }
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(hideToast, actionLabel?6000:3000);
+}
+function hideToast(){ var t=byId('toast'); if(t) t.classList.remove('show'); }
+
+function copyText(text, onDone){
+  function fallback(){
+    var ta=document.createElement('textarea');
+    ta.value=text; ta.setAttribute('readonly',''); ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    var ok=false; try { ok=document.execCommand('copy'); } catch(e){}
+    document.body.removeChild(ta);
+    onDone(ok);
+  }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(function(){ onDone(true); }, fallback);
+  } else fallback();
+}
+
+function paintRange(el){
+  if(!el) return;
+  var min=+el.min||0, max=+el.max||100, v=+el.value||0;
+  el.style.setProperty('--pct', (max>min ? ((v-min)/(max-min))*100 : 0)+'%');
+}
+
+function setMeter(id,pct){
+  var m=byId(id); if(!m) return;
+  var fill=m.querySelector('.meter-fill'), bar=m.querySelector('.meter-bar');
+  var has = pct!==null && Number.isFinite(pct);
+  m.classList.toggle('empty', !has);
+  m.classList.toggle('over', has && pct>100);
+  fill.style.width = (has ? Math.max(0,Math.min(100,pct)) : 0)+'%';
+  bar.setAttribute('aria-valuenow', has ? Math.round(pct) : 0);
+  bar.setAttribute('aria-valuetext', has ? Math.round(pct)+'%' : 'Not available');
+}
+
+// ── Transport unit rail ──
+function silhouette(kind,len){
+  var w=Math.round(46+len/636*84), h=30, body=w-4;
+  var s='<svg viewBox="0 0 '+w+' '+h+'" width="'+w+'" height="'+h+'" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">';
+  if(kind==='trailer'){
+    s+='<rect x="2" y="3" width="'+body+'" height="18" rx="1.5"/>';
+    s+='<circle cx="'+(w-20)+'" cy="25" r="3"/><circle cx="'+(w-11)+'" cy="25" r="3"/><path d="M12 21v6M9 27h6"/>';
+  } else if(kind==='sea'){
+    s+='<rect x="2" y="5" width="'+body+'" height="21" rx="1"/>';
+    for(var x=8;x<w-6;x+=6) s+='<path d="M'+x+' 8v15" stroke-width="1" opacity=".55"/>';
+  } else if(kind==='flatbed'){
+    s+='<path d="M2 19h'+body+'v3H2z"/><path d="M4 19V11" opacity=".6"/>';
+    s+='<circle cx="'+(w-20)+'" cy="25.5" r="3"/><circle cx="'+(w-11)+'" cy="25.5" r="3"/><path d="M12 22v5M9 27h6"/>';
+  } else if(kind==='intermodal'){
+    s+='<rect x="2" y="3" width="'+body+'" height="17" rx="1"/>';
+    for(var xi=9;xi<w-6;xi+=8) s+='<path d="M'+xi+' 6v11" stroke-width="1" opacity=".55"/>';
+    s+='<path d="M2 22h'+body+'" /><circle cx="'+(w-18)+'" cy="26" r="2.6"/><circle cx="'+(w-10)+'" cy="26" r="2.6"/>';
+  } else {
+    s+='<rect x="2" y="5" width="'+body+'" height="20" rx="1" stroke-dasharray="4 3"/>';
+  }
+  return s+'</svg>';
+}
+
+function buildRail(){
+  var wrap=byId('equipCards'); if(!wrap) return;
+  var keys=Object.keys(PRESETS);
+  wrap.innerHTML=keys.map(function(key){
+    var p=PRESETS[key], sn=SHORT_NAMES[key]||[p.kind,p.name];
+    return '<button type="button" class="eq-card" data-preset="'+key+'" aria-pressed="false">'+
+      '<span class="eq-art">'+silhouette(p.kind,p.L)+'</span>'+
+      '<span class="eq-kind">'+safeText(sn[0])+'</span><span class="eq-name">'+safeText(sn[1])+'</span>'+
+      '<span class="eq-size">'+p.L+'″ × '+p.W+'″ × '+p.H+'″</span></button>';
+  }).join('')+
+  '<button type="button" class="eq-card" data-preset="custom" aria-pressed="false">'+
+    '<span class="eq-art">'+silhouette('custom',520)+'</span>'+
+    '<span class="eq-kind">Your own size</span><span class="eq-name">Custom</span>'+
+    '<span class="eq-size">Edit interior dimensions</span></button>';
+}
+
+function syncEquipment(){
+  var v=selectedContainerPreset();
+  document.querySelectorAll('.eq-card').forEach(function(b){
+    var a=b.getAttribute('data-preset')===v;
+    b.classList.toggle('active',a); b.setAttribute('aria-pressed',a?'true':'false');
+  });
+  byId('stageEquipName').textContent=C.name||'Custom';
+  byId('stageEquipDims').textContent=C.L+'″ L × '+C.W+'″ W × '+C.H+'″ H, '+fmtInt(C.Vu)+' ft³ usable, '+MAX_PAYLOAD_KG.toLocaleString()+' kg payload';
+}
+
+function syncCollapsibles(){
+  [['containerDimsToggle','containerDimsBody'],['dimsToggle','dimsBody']].forEach(function(pair){
+    var t=byId(pair[0]), b=byId(pair[1]); if(!t||!b) return;
+    var open=b.classList.contains('open');
+    t.classList.toggle('open',open); t.setAttribute('aria-expanded',open?'true':'false');
+  });
+  var w=document.querySelector('#dimsToggle .toggle-word');
+  if(w) w.textContent = byId('dimsBody').classList.contains('open') ? 'Hide' : 'Show';
+}
+
+function syncLoader(){
+  var s=byId('slider'), v=+s.value||0, max=+s.max||0;
+  byId('sliderMax').textContent=max;
+  byId('palletMinus').disabled = v<=0;
+  byId('palletPlus').disabled = v>=max;
+  byId('palletMax').disabled = v>=max;
+  paintRange(s); paintRange(byId('zoomSlider'));
+  byId('statRowsNote').textContent = isMultiMode() ? 'with pallets' : 'used / max';
+}
+
+function syncMobileBar(){
+  var s=byId('slider'), fill=percentFrom(byId('statFill'));
+  byId('mobileBarText').innerHTML='<b>'+(+s.value||0)+' of '+(+s.max||0)+'</b> pallets<br>'+(fill===null?'—':fill+'%')+' of usable volume';
+}
+
+function setPallets(v){
+  var s=byId('slider'); var max=+s.max||0;
+  s.value=clamp(Math.round(v),0,max);
+  s.dispatchEvent(new Event('input',{bubbles:true}));
+}
+
+// ── How full it is, and where the empty space sits ──
+function emptyInfo(){
+  var n=+byId('slider').value||0, usedLen=0, topZ=0, usedVolIn3=0, pallets=0, boxes=0, kg=0, hasWeight=false;
+  if(isMultiMode()){
+    var M=LAST_M||buildMultiPlan(), vis=selectVisibleMultiPallets(M,n), allKnown=vis.length>0;
+    vis.forEach(function(sel){
+      var pl=sel.place, h=0;
+      sel.place.pattern.pallets.slice(0,sel.count).forEach(function(p){
+        h+=p.height; usedVolIn3+=p.boxVolume+p.palletVolume; boxes+=p.boxCount;
+        if(p.part.partWeightKg>0) kg+=p.partsCount*p.part.partWeightKg; else allKnown=false;
+      });
+      usedLen=Math.max(usedLen,pl.x+pl.w); topZ=Math.max(topZ,h); pallets+=sel.count;
+    });
+    hasWeight=allKnown;
+  } else {
+    var L=calcLayout(), maxTotal=L.MAX_PAL*L.ACTUAL_TIERS, total=clamp(n,0,maxTotal);
+    var cols=Math.max(1,L.PAL_COLS), positions=L.ACTUAL_TIERS>0?Math.ceil(total/L.ACTUAL_TIERS):0;
+    usedLen=Math.ceil(positions/cols)*PL;
+    topZ=total>0 ? L.UNIT_H*Math.min(L.ACTUAL_TIERS,total) : 0;
+    pallets=total; boxes=total*L.BOXES_PER_PAL;
+    usedVolIn3=total*(L.BOXES_PER_PAL*BL*BW*BH + PL*PW*PH);
+    var partKg=weightToKg(PART_WEIGHT,PART_WEIGHT_UNIT);
+    hasWeight=partKg>0 && QTY_SUT>0;
+    kg=hasWeight ? boxes*QTY_SUT*partKg : 0;
+    var deck=(PL*PW>0)?L.BOXES_PER_LAYER*L.pack.boxX*L.pack.boxY/(PL*PW)*100:0;
+    var info0={deck:deck, layout:L};
+  }
+  var usedVol=usedVolIn3/1728;
+  return {
+    usedLen:Math.min(usedLen,C.L), topZ:Math.min(topZ,C.H), usedVol:usedVol,
+    emptyVol:Math.max(0,C.Vu-usedVol), freeLen:Math.max(0,C.L-Math.min(usedLen,C.L)), headroom:Math.max(0,C.H-Math.min(topZ,C.H)),
+    pallets:pallets, boxes:boxes, kg:kg, hasWeight:hasWeight,
+    deck:(typeof info0!=='undefined'&&info0)?info0.deck:null, layout:(typeof info0!=='undefined'&&info0)?info0.layout:null
+  };
+}
+
+function ghostRegion(x0,x1,y0,y1,z0,z1,label){
+  if(x1-x0<0.5 || z1-z0<0.5) return;
+  var fill=dark?'rgba(63,191,199,0.09)':'rgba(10,124,134,0.08)';
+  var edge=dark?'rgba(99,205,212,0.6)':'rgba(10,124,134,0.5)';
+  var quads=[
+    [pt(x0,y0,z1),pt(x1,y0,z1),pt(x1,y1,z1),pt(x0,y1,z1)],
+    [pt(x0,y1,z0),pt(x1,y1,z0),pt(x1,y1,z1),pt(x0,y1,z1)],
+    [pt(x1,y0,z0),pt(x1,y1,z0),pt(x1,y1,z1),pt(x1,y0,z1)]
+  ];
+  ctx.save();
+  ctx.lineWidth=1.2; ctx.setLineDash([5,4]);
+  quads.forEach(function(q){
+    ctx.beginPath(); ctx.moveTo(q[0].x,q[0].y);
+    for(var i=1;i<q.length;i++) ctx.lineTo(q[i].x,q[i].y);
+    ctx.closePath();
+    ctx.fillStyle=fill; ctx.fill();
+    ctx.strokeStyle=edge; ctx.stroke();
+  });
+  ctx.setLineDash([]);
+  if(label){
+    var c=pt((x0+x1)/2,(y0+y1)/2,(z0+z1)/2);
+    var fs=Math.max(11,Math.round(12*S/0.9));
+    ctx.font='600 '+fs+'px "Barlow Semi Condensed",-apple-system,sans-serif';
+    var tw=ctx.measureText(label).width, pw=tw+14, ph=fs+9;
+    ctx.fillStyle=dark?'rgba(19,32,44,0.9)':'rgba(243,245,246,0.94)';
+    roundedRectPath(c.x-pw/2,c.y-ph/2,pw,ph,4); ctx.fill();
+    ctx.strokeStyle=edge; ctx.lineWidth=1; ctx.stroke();
+    ctx.fillStyle=dark?'#9FD9DD':'#0A6670'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(label,c.x,c.y);
+  }
+  ctx.restore();
+}
+
+function drawEmptySpace(info){
+  if(!SHOW_EMPTY || info.pallets<=0) return;
+  if(info.freeLen>=1) ghostRegion(info.usedLen,C.L,0,C.W,0,C.H, info.freeLen>=18 ? Math.round(info.freeLen)+'″ free' : '');
+  if(info.headroom>=1 && info.usedLen>0) ghostRegion(0,info.usedLen,0,C.W,info.topZ,C.H, (info.headroom>=14 && info.usedLen>C.L*0.25) ? Math.round(info.headroom)+'″ headroom' : '');
+}
+
+function renderEmpty(info){
+  var list=byId('insightList'), items=[], ends=endNames();
+  var pctEmpty=C.Vu>0?Math.max(0,100-info.usedVol/C.Vu*100):0;
+  byId('statEmptyVol').textContent=info.pallets>0||info.usedVol>0 ? fmtInt(info.emptyVol)+' ft³' : fmtInt(C.Vu)+' ft³';
+  byId('statEmptyVolNote').textContent=Math.round(pctEmpty)+'% of '+fmtInt(C.Vu)+' ft³ usable';
+  byId('statFreeLen').textContent=info.freeLen.toFixed(1)+'″';
+  byId('statFreeLenNote').textContent=info.pallets>0?'beyond the last row, of '+C.L+'″':'nothing loaded yet';
+  byId('statHeadroom').textContent=info.pallets>0?info.headroom.toFixed(1)+'″':'—';
+  var freeKg=Math.max(0,MAX_PAYLOAD_KG-info.kg);
+  byId('statFreeWeight').textContent=info.hasWeight?formatKg(freeKg):'—';
+  byId('statFreeWeightNote').textContent=info.hasWeight?'of '+MAX_PAYLOAD_KG.toLocaleString()+' kg':'part weight not set';
+
+  if(info.pallets<=0){
+    list.innerHTML='<li><span class="insight-tag">Empty</span><span>Nothing is loaded yet. Add pallets with the slider, or select Load max to fill the unit.</span></li>';
+    return;
+  }
+  items.push({k:'ok',label:'Filled',t:fmtInt(info.usedVol)+' ft³ of the '+fmtInt(C.Vu)+' ft³ usable volume is taken by '+plural(info.pallets,'pallet')+' and '+fmtInt(info.boxes)+' boxes.'});
+  items.push({k:'',label:'Empty',t:fmtInt(info.emptyVol)+' ft³ stays empty, '+Math.round(pctEmpty)+'% of the usable volume.'});
+  if(info.freeLen>=1) items.push({k:'',label:'Floor',t:info.freeLen.toFixed(1)+'″ of floor length is free at the '+ends[1].toLowerCase()+', '+Math.round(info.freeLen/C.L*100)+'% of the length'+(PL>0?', about '+(info.freeLen/PL).toFixed(1)+' pallet rows':'')+'.'});
+  else items.push({k:'',label:'Floor',t:'The floor is covered from the '+ends[0].toLowerCase()+' to the '+ends[1].toLowerCase()+'.'});
+  if(info.headroom>=1) items.push({k:'',label:'Height',t:info.headroom.toFixed(1)+'″ of headroom stays open above the load, out of '+C.H+'″.'});
+  else items.push({k:'',label:'Height',t:'The load reaches the ceiling.'});
+  if(!isMultiMode() && info.deck!==null && info.deck<99) items.push({k:'',label:'Pallets',t:'Boxes cover '+Math.round(info.deck)+'% of each pallet deck, so the rest of the deck stays open.'});
+  else if(info.hasWeight) items.push({k:'',label:'Weight',t:formatKg(Math.max(0,MAX_PAYLOAD_KG-info.kg))+' of payload is still available out of '+MAX_PAYLOAD_KG.toLocaleString()+' kg.'});
+  list.innerHTML=items.slice(0,6).map(function(it){ return '<li><span class="insight-tag '+it.k+'">'+safeText(it.label)+'</span><span>'+safeText(it.t)+'</span></li>'; }).join('');
+}
+
+function fixSingleModeLabels(){
+  if(isMultiMode()) return;
+  byId('statPalNote').textContent='occupied / max';
+  var sp=byId('boxLegendEven').querySelector('span'); if(sp) sp.textContent='Boxes — even layers';
+  byId('boxLegendOdd').querySelector('.legend-swatch').style.background=BOX_COLORS[0].top;
+  byId('boxLegendEven').querySelector('.legend-swatch').style.background=BOX_COLORS[1].top;
+}
+
+// ── Wrap engine functions ──
+var buildMultiPlanEngine=buildMultiPlan;
+buildMultiPlan=function(){ var M=buildMultiPlanEngine(); LAST_M=M; return M; };
+
+var drawEngine=draw;
+draw=function(n){
+  var r=drawEngine(n);
+  fixSingleModeLabels();
+  var info=emptyInfo();
+  drawEmptySpace(info);
+  syncEquipment(); syncLoader();
+  setMeter('volMeter', percentFrom(byId('statFill')));
+  setMeter('wtMeter', percentFrom(byId('statWeightFill')));
+  renderEmpty(info);
+  syncMobileBar();
+  return r;
+};
+
+var updateLoadModeUIEngine=updateLoadModeUI;
+updateLoadModeUI=function(){
+  updateLoadModeUIEngine();
+  byId('dimsToggleLabel').textContent=isMultiMode()?'Parts, pallets and boxes':'Pallets and boxes';
+};
+
+var updateViewStyleButtonEngine=updateViewStyleButton;
+updateViewStyleButton=function(){
+  updateViewStyleButtonEngine();
+  byId('viewStyleText').textContent=isAesthetic()?'Schematic':'Realistic';
+  var b=byId('viewStyleToggle'), t=isAesthetic()?'Switch to schematic look':'Switch to realistic look';
+  b.setAttribute('title',t); b.setAttribute('aria-label',t);
+};
+
+var resetToDefaultsEngine=resetToDefaults;
+resetToDefaults=function(){
+  resetToDefaultsEngine();
+  byId('dimsToggle').classList.add('open'); byId('dimsBody').classList.add('open');
+  syncCollapsibles(); saveState();
+  draw(+byId('slider').value);
+  showToast('Setup reset to defaults. Saved scenarios were kept.');
+};
+
+var applyThemeEngine=applyTheme;
+applyTheme=function(theme){
+  applyThemeEngine(theme);
+  byId('themeToggleText').textContent = theme==='dark' ? 'Light mode' : 'Dark mode';
+};
+
+var loadSavedStateEngine=loadSavedState;
+loadSavedState=function(){ var ok=loadSavedStateEngine(); syncCollapsibles(); return ok; };
+
+// ── Events ──
+buildRail();
+byId('equipCards').addEventListener('click',function(e){
+  var card=e.target.closest('.eq-card'); if(!card) return;
+  var key=card.getAttribute('data-preset'), sel=byId('containerPreset');
+  if(key==='custom'){
+    sel.value='custom'; byId('presetBadge').textContent='';
+    applyContainerInputs({name:'Custom',type:'enclosed',kind:'custom',center:true});
+    byId('containerDimsToggle').classList.add('open'); byId('containerDimsBody').classList.add('open');
+    syncCollapsibles(); saveState();
+    var f=byId('cL'); f.focus(); f.select();
+  } else { sel.value=key; sel.dispatchEvent(new Event('change')); }
+  draw(+byId('slider').value);
+});
+['containerDimsToggle','dimsToggle'].forEach(function(id){ byId(id).addEventListener('click',syncCollapsibles); });
+
+function stopPlay(){ if(playTimer){ clearInterval(playTimer); playTimer=null; } byId('playLoad').classList.remove('playing'); byId('playText').textContent='Play loading'; byId('playLoad').setAttribute('aria-label','Play loading sequence'); }
+function togglePlay(){
+  if(playTimer){ stopPlay(); return; }
+  var s=byId('slider'), max=+s.max||0;
+  if(max<=0) return;
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){ setPallets(max); return; }
+  if(+s.value>=max) setPallets(0);
+  byId('playLoad').classList.add('playing'); byId('playText').textContent='Pause'; byId('playLoad').setAttribute('aria-label','Pause loading sequence');
+  var delay=Math.max(90, Math.min(420, 5200/max));
+  playTimer=setInterval(function(){
+    var v=+s.value||0;
+    if(v>=(+s.max||0)){ stopPlay(); return; }
+    setPallets(v+1);
+  }, delay);
+}
+byId('playLoad').addEventListener('click',togglePlay);
+byId('palletMinus').addEventListener('click',function(){ stopPlay(); setPallets((+byId('slider').value||0)-1); });
+byId('palletPlus').addEventListener('click',function(){ stopPlay(); setPallets((+byId('slider').value||0)+1); });
+byId('palletMax').addEventListener('click',function(){ stopPlay(); setPallets(+byId('slider').max||0); });
+byId('slider').addEventListener('pointerdown',stopPlay);
+byId('emptyToggle').addEventListener('click',function(){
+  SHOW_EMPTY=!SHOW_EMPTY;
+  storageSet(EMPTY_KEY,SHOW_EMPTY?'1':'0');
+  syncEmptyToggle();
+  draw(+byId('slider').value);
+});
+function syncEmptyToggle(){
+  var b=byId('emptyToggle');
+  b.setAttribute('aria-pressed',SHOW_EMPTY?'true':'false');
+  b.classList.toggle('on',SHOW_EMPTY);
+  b.title=SHOW_EMPTY?'Hide the empty space':'Show the empty space';
+}
+syncEmptyToggle();
+byId('zoomSlider').addEventListener('input',function(){ paintRange(this); });
+byId('zoomIn').addEventListener('click',function(){ setZoomPercent((+byId('zoomSlider').value||100)+15,{center:true}); });
+byId('zoomOut').addEventListener('click',function(){ setZoomPercent((+byId('zoomSlider').value||100)-15,{center:true}); });
+
+// Tabs
+(function(){
+  var tabs=Array.prototype.slice.call(document.querySelectorAll('.analysis .tab'));
+  function activate(tab,focus){
+    tabs.forEach(function(t){
+      var on=t===tab; t.classList.toggle('active',on); t.setAttribute('aria-selected',on?'true':'false'); t.tabIndex=on?0:-1;
+      byId(t.getAttribute('aria-controls')).hidden=!on;
+    });
+    if(focus) tab.focus();
+  }
+  tabs.forEach(function(t,i){
+    t.addEventListener('click',function(){ activate(t); });
+    t.addEventListener('keydown',function(e){
+      if(e.key==='ArrowRight'){ e.preventDefault(); activate(tabs[(i+1)%tabs.length],true); }
+      else if(e.key==='ArrowLeft'){ e.preventDefault(); activate(tabs[(i-1+tabs.length)%tabs.length],true); }
+    });
+  });
+})();
+
+byId('mobileBarBtn').addEventListener('click',function(){
+  byId('stage').scrollIntoView({behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth', block:'start'});
+});
+if('IntersectionObserver' in window){
+  new IntersectionObserver(function(entries){ entries.forEach(function(e){ byId('mobileBar').classList.toggle('away', e.isIntersecting); }); },{threshold:0.2}).observe(byId('canvasViewport'));
+}
+
+// Copy results for Excel (tab-separated)
+byId('copyExcel').addEventListener('click',function(){
+  var lines=[], clean=function(t){ return String(t||'').replace(/\s+/g,' ').trim(); };
+  lines.push(['Testing Loading Simulator', new Date().toLocaleString()].join('\t'));
+  lines.push(['Transport unit', C.name, C.L+' x '+C.W+' x '+C.H+' in', C.Vu+' ft3 usable'].join('\t'));
+  lines.push(['Mode', isMultiMode()?'Multiple parts':'Single part'].join('\t'));
+  lines.push(['Volume fill', clean(byId('statFill').textContent)].join('\t'));
+  lines.push(['Weight fill', clean(byId('statWeightFill').textContent)].join('\t'));
+  document.querySelectorAll('.results .stat').forEach(function(st){
+    var v=st.querySelector('strong'), label=clean(st.childNodes[0].textContent);
+    var val=v.classList.contains('multi-part-total') ? v.innerHTML.split('<br>').map(clean).join('; ') : clean(v.textContent);
+    lines.push([label, val].join('\t'));
+  });
+  byId('insightList').querySelectorAll('li').forEach(function(li){
+    lines.push(Array.prototype.map.call(li.children,function(sp){ return clean(sp.textContent); }).join('\t'));
+  });
+  copyText(lines.join('\n'), function(ok){ showToast(ok?'Results copied. Paste them into Excel.':'Copy was blocked by the browser. Try again from the downloaded file.'); });
+});
+// ── Dialogs ──
+function openDialog(id){
+  var d=byId(id); if(!d) return;
+  if(typeof d.showModal==='function'){ if(!d.open) d.showModal(); }
+  else d.setAttribute('open','');
+}
+function closeDialog(d){ if(!d) return; if(typeof d.close==='function') d.close(); else d.removeAttribute('open'); }
+document.querySelectorAll('dialog.sheet').forEach(function(d){
+  d.addEventListener('click',function(e){
+    if(e.target.closest('[data-close]')) closeDialog(d);
+    else if(e.target===d){
+      var r=d.getBoundingClientRect();
+      if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom) closeDialog(d);
+    }
+  });
+});
+
+// ── Scenarios ──
+function getScenarios(){
+  try { var a=JSON.parse(storageGet(SCENARIO_KEY)||'[]'); return Array.isArray(a)?a:[]; }
+  catch(e){ return []; }
+}
+function setScenarios(list){ storageSet(SCENARIO_KEY, JSON.stringify(list)); syncScenarioCount(); }
+function syncScenarioCount(){ var c=byId('scenarioCount'); if(c) c.textContent=getScenarios().length; }
+
+function scenarioSnapshot(){
+  return {
+    equipment: C.name,
+    mode: LOAD_MODE,
+    pallets: byId('statTotalPallets').textContent,
+    boxes: byId('statBoxes').textContent,
+    fill: byId('statFill').textContent
+  };
+}
+function suggestScenarioName(){
+  if(isMultiMode()) return MULTI_PARTS.map(function(p){return p.name;}).slice(0,3).join(' + ')+', '+C.name;
+  return BL+'×'+BW+'×'+BH+'″ box, '+C.name;
+}
+function renderScenarios(){
+  var list=byId('scenarioList'), items=getScenarios();
+  if(!items.length){
+    list.innerHTML='<li class="empty-state">No saved scenarios yet. Name the current setup above and save it to compare later.</li>';
+    return;
+  }
+  list.innerHTML=items.map(function(s){
+    var d=new Date(s.savedAt), when=isNaN(d)?'':d.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
+    var snap=s.snap||{};
+    var meta=[snap.equipment, snap.mode==='multi'?'multiple parts':'single part', (snap.pallets?snap.pallets+' pallets':''), (snap.fill&&snap.fill!=='—'?snap.fill+' volume':''), when].filter(Boolean).join(', ');
+    return '<li class="scenario-item" data-id="'+safeText(s.id)+'"><span class="scenario-name">'+safeText(s.name)+'</span>'+
+      '<span class="scenario-meta">'+safeText(meta)+'</span>'+
+      '<span class="scenario-actions"><button class="small-btn primary" type="button" data-act="load">Open</button><button class="small-btn" type="button" data-act="update">Overwrite</button><button class="small-btn danger" type="button" data-act="delete">Delete</button></span></li>';
+  }).join('');
+}
+function applyStateObject(state){
+  if(!state || state.version!==1) return false;
+  storageSet(STORAGE_KEY, JSON.stringify(state));
+  var ok=loadSavedState();
+  syncCollapsibles();
+  draw(+byId('slider').value);
+  centerViewport();
+  return ok;
+}
+function makeShareCode(){
+  var payload={app:'testing-loading-simulator',v:1,current:collectState(),scenarios:getScenarios()};
+  try { return btoa(unescape(encodeURIComponent(JSON.stringify(payload)))); }
+  catch(e){ return ''; }
+}
+function refreshShareCode(){ var o=byId('shareCodeOut'); if(o) o.value=makeShareCode(); }
+
+byId('openScenarios').addEventListener('click',function(){
+  renderScenarios(); refreshShareCode();
+  byId('scenarioName').value=''; byId('scenarioName').placeholder=suggestScenarioName();
+  byId('copyMsg').textContent=''; byId('importMsg').textContent='';
+  openDialog('scenarioDialog');
+});
+byId('saveNoteScenarios').addEventListener('click',function(){ byId('openScenarios').click(); });
+
+byId('scenarioForm').addEventListener('submit',function(e){
+  e.preventDefault();
+  var name=byId('scenarioName').value.trim() || byId('scenarioName').placeholder || 'Untitled scenario';
+  var list=getScenarios();
+  list.unshift({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6), name:name, savedAt:new Date().toISOString(), state:collectState(), snap:scenarioSnapshot()});
+  setScenarios(list);
+  byId('scenarioName').value='';
+  renderScenarios(); refreshShareCode();
+  showToast('Saved “'+name+'”');
+});
+
+byId('scenarioList').addEventListener('click',function(e){
+  var btn=e.target.closest('[data-act]'); if(!btn) return;
+  var id=btn.closest('.scenario-item').getAttribute('data-id');
+  var list=getScenarios(), idx=list.findIndex(function(s){return s.id===id;});
+  if(idx<0) return;
+  var act=btn.getAttribute('data-act'), item=list[idx];
+  if(act==='load'){
+    if(applyStateObject(item.state)!==false){
+      closeDialog(byId('scenarioDialog'));
+      showToast('Opened “'+item.name+'”');
+    }
+  } else if(act==='update'){
+    item.state=collectState(); item.snap=scenarioSnapshot(); item.savedAt=new Date().toISOString();
+    setScenarios(list); renderScenarios(); refreshShareCode();
+    showToast('Overwrote “'+item.name+'” with the current setup');
+  } else if(act==='delete'){
+    lastDeletedScenario={item:item,index:idx};
+    list.splice(idx,1); setScenarios(list); renderScenarios(); refreshShareCode();
+    showToast('Deleted “'+item.name+'”','Undo',function(){
+      if(!lastDeletedScenario) return;
+      var l=getScenarios(); l.splice(Math.min(lastDeletedScenario.index,l.length),0,lastDeletedScenario.item);
+      setScenarios(l); renderScenarios(); refreshShareCode(); lastDeletedScenario=null;
+    });
+  }
+});
+
+byId('copyShareCode').addEventListener('click',function(){
+  var out=byId('shareCodeOut'), msg=byId('copyMsg');
+  refreshShareCode();
+  function fallback(){
+    out.focus(); out.select();
+    var ok=false; try { ok=document.execCommand('copy'); } catch(e){}
+    msg.textContent = ok ? 'Copied' : 'Code selected. Press Ctrl+C or ⌘C to copy.';
+  }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(out.value).then(function(){ msg.textContent='Copied'; }, fallback);
+  } else fallback();
+});
+
+byId('importShareCode').addEventListener('click',function(){
+  var raw=byId('shareCodeIn').value.trim(), msg=byId('importMsg');
+  msg.classList.remove('err');
+  if(!raw){ msg.textContent='Paste a share code first.'; msg.classList.add('err'); return; }
+  var data=null;
+  try { data=JSON.parse(decodeURIComponent(escape(atob(raw.replace(/\s+/g,''))))); } catch(e){}
+  if(!data || data.app!=='testing-loading-simulator'){
+    msg.textContent='This code could not be read. Copy the full code again and paste it here.'; msg.classList.add('err'); return;
+  }
+  var list=getScenarios(), ids={}, added=0;
+  list.forEach(function(s){ ids[s.id]=true; });
+  (Array.isArray(data.scenarios)?data.scenarios:[]).forEach(function(s){
+    if(s && s.id && s.state && !ids[s.id]){ list.push(s); ids[s.id]=true; added++; }
+  });
+  if(data.current && data.current.version===1){
+    list.unshift({id:'imp'+Date.now().toString(36), name:'Imported setup, '+new Date().toLocaleDateString(), savedAt:new Date().toISOString(), state:data.current, snap:{equipment:(data.current.container||{}).name, mode:data.current.loadMode}});
+    added++;
+  }
+  setScenarios(list); renderScenarios(); refreshShareCode();
+  byId('shareCodeIn').value='';
+  msg.textContent = added ? 'Imported '+plural(added,'scenario')+'. Open one from the list above.' : 'Everything in this code is already saved here.';
+});
+
+
+// ── Print load sheet ──
+var printThemeRestore=null;
+function preparePrint(){
+  stopPlay();
+  byId('printMeta').textContent='Printed '+new Date().toLocaleString()+'. '+(isMultiMode()?'Multiple parts':'Single part')+'.';
+  if(dark){ printThemeRestore='dark'; applyTheme('light'); draw(+byId('slider').value); }
+}
+function finishPrint(){
+  if(printThemeRestore){ applyTheme(printThemeRestore); printThemeRestore=null; draw(+byId('slider').value); }
+}
+window.addEventListener('beforeprint',preparePrint);
+window.addEventListener('afterprint',finishPrint);
+byId('printSheet').addEventListener('click',function(){
+  try { window.print(); } catch(e){ showToast('Printing is blocked here. Open the HTML file directly in a browser to print.'); }
+});
+
+// ── Keyboard shortcuts ──
+byId('openShortcuts').addEventListener('click',function(){ openDialog('shortcutDialog'); });
+document.addEventListener('keydown',function(e){
+  if(e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return;
+  var tag=(e.target && e.target.tagName)||'';
+  if(/^(INPUT|SELECT|TEXTAREA)$/.test(tag) || (e.target && e.target.isContentEditable)) return;
+  if(document.querySelector('dialog.sheet[open]')) return;
+  if(tag==='TR' && (e.key==='Enter'||e.key===' ')) return;
+  var views=['isometric','top','side','front','rear'], k=e.key;
+  if(k>='1' && k<='5'){ var btn=document.querySelector('.view-tab[data-view="'+views[+k-1]+'"]'); if(btn) btn.click(); }
+  else if(k==='['){ stopPlay(); setPallets((+byId('slider').value||0)-1); }
+  else if(k===']'){ stopPlay(); setPallets((+byId('slider').value||0)+1); }
+  else if(k==='m'||k==='M'){ stopPlay(); setPallets(+byId('slider').max||0); }
+  else if(k==='p'||k==='P'){ togglePlay(); }
+  else if(k==='+'||k==='='){ setZoomPercent((+byId('zoomSlider').value||100)+10,{preserveFocus:true}); }
+  else if(k==='-'||k==='_'){ setZoomPercent((+byId('zoomSlider').value||100)-10,{preserveFocus:true}); }
+  else if(k==='0'){ byId('resetView').click(); }
+  else if(k==='r'||k==='R'){ byId('viewStyleToggle').click(); }
+  else if(k==='f'||k==='F'){ byId('fullscreenToggle').click(); }
+  else if(k==='s'||k==='S'){ byId('openScenarios').click(); }
+  else if(k==='e'||k==='E'){ byId('emptyToggle').click(); }
+  else if(k==='?'){ openDialog('shortcutDialog'); }
+  else return;
+  e.preventDefault();
+});
+
+if(document.fonts && document.fonts.ready){ document.fonts.ready.then(function(){ draw(+byId('slider').value); }); }
+syncScenarioCount();
+applyTheme(dark?'dark':'light');
+syncCollapsibles();
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+updateProjectionBasis();
+updateViewStyleButton();
+updateViewOrientationButtons();
+syncFullscreenButton();
+if(!loadSavedState()){
+  updateDerived();
+  updatePalletUI();
+  draw(updateSlider());
+  saveState();
+}
+setTimeout(centerViewport, 0);
+
+})();

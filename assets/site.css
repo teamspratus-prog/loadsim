@@ -1,0 +1,223 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   Site chrome — shared by index.html and app.html.
+   Art direction "Stencil & Steel": container-side vernacular. Stencilled
+   condensed capitals, corrugation rhythm, data plates, hazard striping used
+   only where a real limit is being described. All colour comes from the
+   tokens the simulator already defines in tokens.css.
+   ───────────────────────────────────────────────────────────────────────── */
+
+.shell { max-width: 1280px; margin: 0 auto; padding: 0 22px; }
+
+/* ── Stencil display type ── */
+.stencil {
+  font-family: var(--f-cond); font-weight: 700; text-transform: uppercase;
+  line-height: .95; letter-spacing: .006em;
+}
+h1.stencil { font-size: clamp(36px, 6.2vw, 74px); }
+h2.stencil { font-size: clamp(25px, 3.1vw, 37px); line-height: 1; }
+h3.stencil { font-size: 19px; letter-spacing: .03em; }
+
+.eyebrow {
+  font: 700 12px var(--f-cond); text-transform: uppercase; letter-spacing: .12em;
+  color: var(--muted);
+}
+
+/* ── Data plate: the stencilled information panel on a container door ── */
+.plate {
+  display: inline-block; padding: 5px 9px; border: 2px solid var(--rule-strong);
+  font: 600 11.5px/1.25 var(--f-cond); text-transform: uppercase; letter-spacing: .08em;
+  color: var(--ink-2); background: transparent;
+}
+.plate strong { color: var(--ink); font-weight: 700; }
+.plate-row { display: flex; flex-wrap: wrap; gap: 7px; }
+
+/* ── Hazard striping — reserved for statements about limits ── */
+.hazard-rule {
+  height: 5px;
+  background: repeating-linear-gradient(-45deg, var(--amber) 0 8px, var(--ink) 8px 16px);
+}
+
+/* ── Corrugation — the ribbed panel rhythm of a container side ── */
+.corr {
+  background-image: repeating-linear-gradient(90deg, transparent 0 10px, var(--rib) 10px 14px);
+}
+.corr-band { height: 28px; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+
+/* ── Top strip ── */
+.site-strip { border-bottom: 1px solid var(--rule); background: var(--panel); }
+.site-strip-inner {
+  max-width: 1280px; margin: 0 auto; padding: 9px 22px;
+  display: flex; align-items: center; gap: 12px 22px; flex-wrap: wrap;
+}
+.wordmark {
+  display: inline-flex; align-items: center; gap: 9px; text-decoration: none;
+  color: var(--ink); margin-right: auto; min-width: 0;
+}
+.wordmark svg { width: 25px; height: 25px; flex: 0 0 auto; }
+.wordmark span {
+  font: 700 14px var(--f-cond); text-transform: uppercase; letter-spacing: .1em; white-space: nowrap;
+}
+.site-nav { display: flex; align-items: center; gap: 2px; flex-wrap: wrap; }
+.site-nav a, .strip-btn {
+  font: 600 12px var(--f-cond); text-transform: uppercase; letter-spacing: .09em;
+  color: var(--muted); text-decoration: none; padding: 7px 9px;
+  border: 0; background: transparent; border-bottom: 2px solid transparent;
+}
+.site-nav a:hover, .strip-btn:hover { color: var(--ink); }
+.site-nav a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--ink); }
+.strip-btn { color: var(--ink-2); }
+
+/* ── Sections ── */
+.sect { padding: 56px 0; border-top: 1px solid var(--rule); }
+.sect-head { margin-bottom: 26px; max-width: 58ch; }
+.sect-head .eyebrow { display: block; margin-bottom: 7px; }
+.sect-head p { font-size: 14.5px; color: var(--ink-2); margin-top: 10px; max-width: 62ch; }
+
+/* ── Hero ── */
+.hero-wrap { padding: 40px 0 52px; }
+.hero { display: grid; gap: 30px; align-items: start; }
+@media (min-width: 1080px) {
+  .hero { grid-template-columns: minmax(300px, 26rem) minmax(0, 1fr); gap: 44px; }
+}
+.hero-title { margin: 16px 0 30px; max-width: 19ch; }
+.hero .lead { font-size: 16.5px; line-height: 1.5; color: var(--ink-2); margin-top: 0; max-width: 44ch; }
+.hero-actions { display: flex; align-items: center; gap: 8px 18px; flex-wrap: wrap; margin-top: 22px; }
+.hero-plates { margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--rule); }
+.hero-plates .lead { margin-top: 8px; font-size: 14.5px; }
+
+.btn-solid {
+  display: inline-flex; align-items: center; gap: 9px; height: 42px; padding: 0 18px;
+  border: 2px solid var(--accent); background: var(--accent); color: var(--accent-ink);
+  font: 700 13px var(--f-cond); text-transform: uppercase; letter-spacing: .09em;
+  text-decoration: none; border-radius: 3px;
+}
+.btn-solid:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+.btn-text {
+  font-size: 13.5px; font-weight: 600; color: var(--accent);
+  text-decoration: underline; text-underline-offset: 3px;
+}
+
+/* ── Live tool frame ── */
+.demo { border: 1px solid var(--rule-strong); background: var(--bay); min-width: 0; }
+.demo-bar {
+  display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap;
+  padding: 7px 11px; background: var(--ink); color: var(--panel);
+}
+.demo-bar b {
+  font: 700 11.5px var(--f-cond); text-transform: uppercase; letter-spacing: .12em;
+}
+.demo-bar span { font-size: 12px; opacity: .78; margin-left: auto; }
+/* Tall enough that the isometric view is not cropped: the simulator fits the
+   isometric projection to width only, so a short frame clips the container. */
+.demo iframe { display: block; width: 100%; height: clamp(500px, 66vh, 660px); border: 0; }
+.demo-note { display: none; padding: 10px 12px; border-top: 1px solid var(--rule); font-size: 12.5px; color: var(--muted); }
+@media (max-width: 900px) {
+  /* A one-finger drag inside the frame would pan the 3D view instead of
+     scrolling the page, so the embed is display-only on small screens. */
+  .demo iframe { pointer-events: none; height: 360px; }
+  .demo-note { display: block; }
+}
+
+/* ── Output specification list ── */
+.specs { display: grid; gap: 0 46px; }
+@media (min-width: 780px) { .specs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.spec {
+  display: grid; grid-template-columns: 1fr auto; gap: 3px 16px; align-items: baseline;
+  padding: 11px 0; border-bottom: 1px dotted var(--rule);
+}
+.spec dt { font-size: 14.5px; font-weight: 600; }
+.spec .unit {
+  font: 700 11px var(--f-cond); text-transform: uppercase; letter-spacing: .08em;
+  color: var(--muted); text-align: right; white-space: nowrap;
+}
+.spec .desc { grid-column: 1 / -1; font-size: 13.5px; color: var(--ink-2); max-width: 54ch; }
+
+/* ── Units table ── */
+.table-scroll { overflow-x: auto; }
+.units { width: 100%; max-width: 1060px; border-collapse: collapse; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+.units th {
+  text-align: left; padding: 0 16px 9px 0; border-bottom: 2px solid var(--ink);
+  font: 700 11.5px var(--f-cond); text-transform: uppercase; letter-spacing: .08em; color: var(--muted);
+  white-space: nowrap;
+}
+.units td { padding: 9px 16px 9px 0; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+.units tbody tr:hover td { background: var(--panel-2); }
+.units .num { text-align: right; }
+.units .u-name { font-weight: 600; }
+.units .u-kind {
+  display: block; font: 500 11px var(--f-cond); text-transform: uppercase;
+  letter-spacing: .07em; color: var(--muted);
+}
+.table-foot { font-size: 12.5px; color: var(--muted); margin-top: 12px; max-width: 72ch; }
+
+/* ── Modes ── */
+.modes { display: grid; gap: 34px; }
+@media (min-width: 900px) { .modes { grid-template-columns: 1.08fr .92fr; gap: 46px; } }
+.mode p { font-size: 14px; color: var(--ink-2); margin: 9px 0 4px; max-width: 52ch; }
+.tick-list { list-style: none; }
+.tick-list li {
+  position: relative; padding: 8px 0 8px 18px; font-size: 13.5px;
+  border-bottom: 1px dotted var(--rule);
+}
+.tick-list li::before {
+  content: ""; position: absolute; left: 0; top: 16px; width: 9px; height: 2px; background: var(--accent);
+}
+
+/* ── Limits notice ── */
+.notice { border: 1px solid var(--rule); background: var(--panel); }
+.notice-body { padding: 20px 22px; }
+.notice-body p { font-size: 14px; color: var(--ink-2); max-width: 66ch; }
+.notice-body .tick-list { margin-top: 12px; }
+.notice-body .tick-list li::before { background: var(--amber); }
+
+/* ── Footer (shared with the simulator) ── */
+.site-footer {
+  max-width: 1680px; margin: 0 auto; padding: 4px 22px 26px;
+  display: grid; grid-template-columns: auto 1fr auto; gap: 6px 20px;
+  align-items: baseline; font-size: 12px; color: var(--muted);
+}
+.footer-version { font-weight: 600; color: var(--ink-2); }
+.footer-disclaimer { max-width: 760px; }
+.footer-credit { font-weight: 500; color: var(--ink-2); white-space: nowrap; }
+.site-foot-wrap { border-top: 1px solid var(--rule); margin-top: 8px; padding-top: 22px; }
+.site-foot-wrap .site-footer { max-width: 1280px; }
+.footer-links { display: flex; gap: 14px; flex-wrap: wrap; grid-column: 1 / -1; margin-top: 8px; }
+.footer-links a {
+  font: 600 11.5px var(--f-cond); text-transform: uppercase; letter-spacing: .08em;
+  color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--rule-strong);
+}
+.footer-links a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+
+@media (max-width: 760px) {
+  .site-footer { grid-template-columns: 1fr; }
+  .sect { padding: 42px 0; }
+  .hero-wrap { padding: 28px 0 38px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Embed mode — app.html?embed=1, used by the landing page hero.
+   Hides the workbench chrome and leaves the unit rail and the 3D view, so a
+   visitor can switch units and drag the pallet slider without any sign-up.
+   ───────────────────────────────────────────────────────────────────────── */
+.embed body { padding-bottom: 0; overflow: hidden; }
+.embed .site-strip,
+.embed .topbar,
+.embed .rail-head,
+.embed .rail .collapsible-body,
+.embed .cargo,
+.embed .results,
+.embed .analysis,
+.embed .site-foot-wrap,
+.embed .mobile-bar { display: none !important; }
+.embed .rail { padding: 11px 11px 0; margin-bottom: 9px; }
+.embed .workbench { grid-template-columns: minmax(0, 1fr); grid-template-areas: "viewer"; padding: 0 11px 11px; }
+.embed .viewer { border-radius: 4px; }
+.embed #canvasViewport { height: calc(100vh - 212px); min-height: 210px; }
+
+@media print {
+  .site-strip, .demo, .hero-actions, .footer-links { display: none !important; }
+}

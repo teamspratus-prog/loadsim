@@ -1,0 +1,47 @@
+:root {
+  --page: #D5DBE0; --panel: #F3F5F6; --panel-2: #E6EAED; --panel-3: #D6DCE1;
+  --ink: #12263A; --ink-2: #34485A; --muted: #5B6B7A;
+  --rule: #C4CDD4; --rule-strong: #94A2AE;
+  --accent: #0A7C86; --accent-hover: #086A73; --accent-ink: #FFFFFF; --accent-soft: #D0E9EB;
+  --amber: #F2B01E; --amber-ink: #3F2B00; --amber-soft: #FAEDC8;
+  --danger: #A33218; --danger-soft: #F6E0D6;
+  --field: #FFFFFF; --field-border: #B2BEC8;
+  --rib: rgba(18,38,58,.07); --rib-fill: rgba(255,255,255,.2);
+  --bay: #E9EDF0; --bay-grid: rgba(18,38,58,.06);
+  --float: rgba(243,245,246,.92); --float-border: rgba(18,38,58,.16);
+  --shadow-float: 0 4px 16px rgba(10,24,38,.12);
+  --f-cond: 'Barlow Semi Condensed', 'Arial Narrow', 'Roboto Condensed', system-ui, sans-serif;
+  --f-body: 'Barlow', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --focus: 0 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --page: #0B141C; --panel: #13202C; --panel-2: #1A2A39; --panel-3: #223446;
+    --ink: #E1E8EE; --ink-2: #BAC7D2; --muted: #8C9EAE;
+    --rule: #26394A; --rule-strong: #3E5468;
+    --accent: #3FBFC7; --accent-hover: #64CDD4; --accent-ink: #062629; --accent-soft: #123D44;
+    --amber: #F5C04A; --amber-ink: #2A1D00; --amber-soft: rgba(245,192,74,.14);
+    --danger: #FF9C86; --danger-soft: rgba(210,85,55,.16);
+    --field: #0D1822; --field-border: #34485A;
+    --rib: rgba(255,255,255,.05); --rib-fill: rgba(0,0,0,.16);
+    --bay: #0F1B26; --bay-grid: rgba(255,255,255,.04);
+    --float: rgba(19,32,44,.9); --float-border: rgba(255,255,255,.12);
+    --shadow-float: 0 4px 16px rgba(0,0,0,.35);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --page: #0B141C; --panel: #13202C; --panel-2: #1A2A39; --panel-3: #223446;
+  --ink: #E1E8EE; --ink-2: #BAC7D2; --muted: #8C9EAE;
+  --rule: #26394A; --rule-strong: #3E5468;
+  --accent: #3FBFC7; --accent-hover: #64CDD4; --accent-ink: #062629; --accent-soft: #123D44;
+  --amber: #F5C04A; --amber-ink: #2A1D00; --amber-soft: rgba(245,192,74,.14);
+  --danger: #FF9C86; --danger-soft: rgba(210,85,55,.16);
+  --field: #0D1822; --field-border: #34485A;
+  --rib: rgba(255,255,255,.05); --rib-fill: rgba(0,0,0,.16);
+  --bay: #0F1B26; --bay-grid: rgba(255,255,255,.04);
+  --float: rgba(19,32,44,.9); --float-border: rgba(255,255,255,.12);
+  --shadow-float: 0 4px 16px rgba(0,0,0,.35);
+  color-scheme: dark;
+}

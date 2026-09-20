@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Load simulator — Testing Loading Simulator</title>
+<meta name="description" content="Set pallet and box dimensions and see the load drawn in 3D: pallet positions, boxes per pallet, volume and weight fill, and the empty space that is left over.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Testing Loading Simulator">
+<meta property="og:title" content="Load simulator — Testing Loading Simulator">
+<meta property="og:description" content="Set pallet and box dimensions and see the load drawn in 3D, with the empty space that is left over.">
+<!-- TODO: add <link rel="canonical">, og:url and og:image once the Cloudflare Pages domain is fixed. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/base.css">
+<link rel="stylesheet" href="assets/site.css">
+<link rel="stylesheet" href="assets/app.css">
+<script>
+/* Embed mode for the landing-page hero. The simulator converts a plain wheel
+   event into window.scrollBy, which cannot scroll a parent page from inside an
+   iframe. Stopping the event in the capture phase keeps that handler from
+   running, so the browser chains the scroll out to the page as normal.
+   Ctrl + wheel still reaches the simulator and zooms the view. */
+(function(){
+  if(!/(^|[?&])embed=1(&|$)/.test(location.search)) return;
+  document.documentElement.classList.add('embed');
+  window.addEventListener('wheel', function(e){
+    if(!e.ctrlKey) e.stopPropagation();
+  }, {capture:true, passive:true});
+})();
+</script>
+<script src="assets/site.js"></script>
+</head>
+<body>
+
+<div class="site-strip">
+  <div class="site-strip-inner">
+    <a class="wordmark" href="index.html">
+      <svg viewBox="0 0 40 40" aria-hidden="true">
+        <rect x="2.5" y="9.5" width="35" height="23" rx="1.5" fill="none" stroke="currentColor" stroke-width="2.2"/>
+        <rect x="7" y="22" width="9" height="7" fill="currentColor"/>
+        <rect x="17.5" y="22" width="9" height="7" fill="currentColor" opacity=".55"/>
+        <rect x="7" y="14" width="9" height="7" fill="currentColor" opacity=".55"/>
+        <path d="M31 14v15" stroke="var(--amber)" stroke-width="2.4"/>
+      </svg>
+      <span>Testing Loading Simulator</span>
+    </a>
+    <nav class="site-nav" aria-label="Site">
+      <a href="index.html">Overview</a>
+      <a href="app.html" aria-current="page">Simulator</a>
+    </nav>
+  </div>
+</div>
+<header class="topbar">
+  <div class="brand">
+    <svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true">
+      <rect x="2.5" y="9.5" width="35" height="23" rx="1.5" fill="none" stroke="currentColor" stroke-width="2.2"/>
+      <rect x="7" y="22" width="9" height="7" fill="currentColor"/>
+      <rect x="17.5" y="22" width="9" height="7" fill="currentColor" opacity=".55"/>
+      <rect x="7" y="14" width="9" height="7" fill="currentColor" opacity=".55"/>
+      <path d="M31 14v15" stroke="var(--amber)" stroke-width="2.4"/>
+    </svg>
+    <div class="brand-title">
+      <h1>Testing Loading Simulator</h1>
+      <p class="brand-sub">Pallet and box load planning for trailers, sea containers and flatbeds</p>
+    </div>
+  </div>
+  <div class="print-only" id="printMeta"></div>
+  <nav class="topbar-actions" aria-label="Tools">
+    <button class="tb-btn" id="openScenarios" type="button" aria-haspopup="dialog">
+      <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 2.5h7.5L13 5v8.5H3z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M5.5 2.5v3h4.5v-3M5.5 13.5V9.5h5v4" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+      <span>Scenarios</span><span class="count" id="scenarioCount">0</span>
+    </button>
+    <button class="tb-btn" id="printSheet" type="button">
+      <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4.5 6V2h7v4M4.5 11.5h-2v-5h11v5h-2M4.5 9.5h7V14h-7z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+      <span>Print <span class="label-long">load sheet</span></span>
+    </button>
+    <button class="tb-btn" id="openShortcuts" type="button" aria-haspopup="dialog" title="Keyboard shortcuts">
+      <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="1.5" y="4" width="13" height="8.5" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M4 7h1M7.5 7h1M11 7h1M5 10h6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      <span class="label-long">Shortcuts</span>
+    </button>
+    <button class="tb-btn theme-toggle" id="themeToggle" type="button" aria-label="Switch to dark mode">
+      <span class="theme-toggle-icon" id="themeToggleIcon" aria-hidden="true"></span>
+      <span id="themeToggleText">Dark mode</span>
+    </button>
+  </nav>
+</header>
+
+<!-- Transport unit rail -->
+<section class="rail" aria-labelledby="railTitle">
+  <div class="rail-head">
+    <div class="rail-title">
+      <span class="rail-label">Loading into</span>
+      <h2 id="railTitle"><span id="stageEquipName">Sea CTN 40' HC</span></h2>
+      <p id="stageEquipDims">473.6″ L × 92.6″ W × 106.3″ H</p>
+    </div>
+    <p class="rail-hint" id="railHint">Pick the unit you want to see your load in.</p>
+    <div class="rail-actions">
+      <button type="button" class="ghost-btn collapsible-toggle" id="containerDimsToggle" aria-expanded="false" aria-controls="containerDimsBody">
+        <span>Interior dimensions</span>
+        <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 5l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="rail-cards" id="equipCards" role="group" aria-label="Transport unit"></div>
+  <select class="native-select-hidden" id="containerPreset" aria-hidden="true" tabindex="-1">
+    <option value="custom">Custom</option>
+    <option value="trailer48">Trailer 48'</option>
+    <option value="trailer53">Trailer 53'</option>
+    <option value="sea20std">Sea CTN 20' STD</option>
+    <option value="sea40std">Sea CTN 40' STD</option>
+    <option value="sea40hc" selected>Sea CTN 40' HC</option>
+    <option value="sea45hc">Sea CTN 45' HC</option>
+    <option value="flatbed48">Flatbed 48'</option>
+    <option value="flatbed53">Flatbed 53'</option>
+    <option value="intermodal53">Intermodal CNT 53'</option>
+  </select>
+  <div class="collapsible-body" id="containerDimsBody">
+    <div class="dims-row">
+      <div class="input-block"><label for="cL">Length</label><div class="input-row"><input type="number" inputmode="decimal" id="cL" value="473.6" min="1" step="0.1"><span class="unit">in</span></div></div>
+      <div class="input-block"><label for="cW">Width</label><div class="input-row"><input type="number" inputmode="decimal" id="cW" value="92.6" min="1" step="0.1"><span class="unit">in</span></div></div>
+      <div class="input-block"><label for="cH">Height</label><div class="input-row"><input type="number" inputmode="decimal" id="cH" value="106.3" min="1" step="0.1"><span class="unit">in</span></div></div>
+      <div class="input-block"><label for="cVt">Theoretical volume</label><div class="input-row"><input type="number" inputmode="decimal" id="cVt" value="2694" min="1" step="1"><span class="unit">ft³</span></div></div>
+      <div class="input-block"><label for="cVu">Usable volume</label><div class="input-row"><input type="number" inputmode="decimal" id="cVu" value="2529" min="1" step="1"><span class="unit">ft³</span></div></div>
+      <div class="dims-notes">
+        <div class="derived" id="derivedVol"></div>
+        <p class="derived">Preset interior: <span class="preset-badge" id="presetBadge">473.6″ × 92.6″ × 106.3″</span>. Editing any value switches to a custom unit.</p>
+      </div>
+    </div>
+    <div class="warning" id="warnContainer" role="alert" aria-live="polite"></div>
+  </div>
+</section>
+
+<div class="workbench">
+
+  <!-- Cargo -->
+  <aside class="cargo" aria-label="Cargo" id="setupPanel">
+    <div class="cargo-head">
+      <div class="cargo-head-row">
+        <h2>Cargo</h2>
+        <button type="button" class="collapsible-toggle open icon-toggle" id="dimsToggle" aria-expanded="true" aria-controls="dimsBody">
+          <span id="dimsToggleLabel" class="sr-text">Pallets and boxes</span><span class="toggle-word">Hide</span>
+          <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 5l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+      <div class="mode-tabs" role="tablist" aria-label="Loading mode">
+        <button class="mode-tab active" id="singleModeTab" type="button" role="tab" aria-selected="true">Single part</button>
+        <button class="mode-tab" id="multiModeTab" type="button" role="tab" aria-selected="false">Multiple parts</button>
+      </div>
+    </div>
+    <div class="collapsible-body open" id="dimsBody">
+
+      <div class="block" id="singlePalletCard">
+        <h3>Pallet</h3>
+        <div class="input-block">
+          <div class="input-row picker-row">
+            <select id="palletPreset" class="native-select-hidden" aria-hidden="true" tabindex="-1">
+              <option value="wood" selected>Full wood pallet — 48″ × 45″ × 5″</option>
+              <option value="halfWood">Half wood pallet — 24″ × 45″ × 5″</option>
+              <option value="plastic">Full plastic pallet — 48″ × 45″ × 5″</option>
+              <option value="halfPlastic">Half plastic pallet — 24″ × 45″ × 5″</option>
+              <option value="custom">Custom</option>
+            </select>
+            <div class="custom-select" id="palletPresetPicker">
+              <button type="button" class="custom-select-button" id="palletPresetButton" aria-haspopup="listbox" aria-expanded="false" aria-controls="palletPresetMenu" aria-label="Pallet type">
+                <span class="custom-select-main">Full wood pallet</span>
+                <span class="custom-select-meta">48″ × 45″ × 5″</span>
+              </button>
+              <div class="custom-select-menu" id="palletPresetMenu" role="listbox" aria-label="Pallet type">
+                <button type="button" class="custom-select-option selected" data-value="wood" role="option" aria-selected="true"><span class="option-main">Full wood pallet</span><span class="option-meta">48″ × 45″ × 5″</span></button>
+                <button type="button" class="custom-select-option" data-value="halfWood" role="option" aria-selected="false"><span class="option-main">Half wood pallet</span><span class="option-meta">24″ × 45″ × 5″</span></button>
+                <button type="button" class="custom-select-option" data-value="plastic" role="option" aria-selected="false"><span class="option-main">Full plastic pallet</span><span class="option-meta">48″ × 45″ × 5″</span></button>
+                <button type="button" class="custom-select-option" data-value="halfPlastic" role="option" aria-selected="false"><span class="option-main">Half plastic pallet</span><span class="option-meta">24″ × 45″ × 5″</span></button>
+                <button type="button" class="custom-select-option" data-value="custom" role="option" aria-selected="false"><span class="option-main">Custom</span><span class="option-meta">editable dimensions</span></button>
+              </div>
+            </div>
+          </div>
+          <span class="hint" id="hintPalletPreset">48″ L × 45″ W × 5″ H</span>
+        </div>
+        <div class="custom-dims hidden" id="customPalletDims">
+          <div class="custom-dims-title">Custom pallet dimensions</div>
+          <div class="fields three">
+            <div class="input-block"><label for="dPL">Length</label><div class="input-row"><input type="number" inputmode="decimal" id="dPL" value="48" placeholder="48" min="1" step="0.5"><span class="unit">in</span></div></div>
+            <div class="input-block"><label for="dPW">Width</label><div class="input-row"><input type="number" inputmode="decimal" id="dPW" value="45" placeholder="45" min="1" step="0.5"><span class="unit">in</span></div></div>
+            <div class="input-block"><label for="dPH">Height</label><div class="input-row"><input type="number" inputmode="decimal" id="dPH" value="5" placeholder="5" min="1" step="0.5"><span class="unit">in</span></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="block" id="singleBoxCard">
+        <h3>Box <span class="h-aside">outside dimensions</span></h3>
+        <div class="fields three">
+          <div class="input-block"><label for="dBL">Length</label><div class="input-row"><input type="number" inputmode="decimal" id="dBL" value="45" min="1" step="0.5"><span class="unit">in</span></div></div>
+          <div class="input-block"><label for="dBW">Width</label><div class="input-row"><input type="number" inputmode="decimal" id="dBW" value="24" min="1" step="0.5"><span class="unit">in</span></div></div>
+          <div class="input-block"><label for="dBH">Height</label><div class="input-row"><input type="number" inputmode="decimal" id="dBH" value="18" min="1" step="0.5"><span class="unit">in</span></div></div>
+        </div>
+      </div>
+
+      <div class="block" id="singleLoadingCard">
+        <h3>Stacking <span class="h-aside">capped to what fits</span></h3>
+        <div class="fields two">
+          <div class="input-block">
+            <label for="dBS" id="boxLayersLabel">Box layers per pallet</label>
+            <div class="input-row"><input type="number" inputmode="numeric" id="dBS" value="4" min="1" max="20" step="1"><span class="unit">layers</span></div>
+            <span class="hint" id="hintBS">Boxes stacked on one pallet</span>
+          </div>
+          <div class="input-block">
+            <label for="dPT">Pallet tiers</label>
+            <div class="input-row"><input type="number" inputmode="numeric" id="dPT" value="1" min="1" max="10" step="1"><span class="unit">tiers</span></div>
+            <span class="hint" id="hintPT">Loaded pallets stacked on each other</span>
+          </div>
+        </div>
+        <h3 class="spaced">Parts <span class="h-aside">optional</span></h3>
+        <div class="fields two">
+          <div class="input-block" id="singleQtyBlock">
+            <label for="dQTY">Parts per box (QTY/SUT)</label>
+            <div class="input-row"><input type="number" inputmode="numeric" id="dQTY" value="0" min="0" step="1"><span class="unit">parts</span></div>
+          </div>
+          <div class="input-block" id="singleWeightBlock">
+            <label for="dPartWeight">Weight per part</label>
+            <div class="input-row">
+              <input type="number" inputmode="decimal" id="dPartWeight" value="" min="0" step="0.01" placeholder="—">
+              <select id="dWeightUnit" aria-label="Part weight unit"><option value="kg" selected>kg</option><option value="lb">lb</option></select>
+            </div>
+            <span class="hint" id="hintPartWeight">Payload limit 20,200 kg</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="block multi-part-panel hidden" id="multiPartPanel">
+        <p class="multi-help-lead">Enter exact quantities. Each part gets its own pallet type, and different parts never share a pallet.</p>
+        <div class="multi-parts-list" id="multiPartsList"></div>
+        <div class="multi-part-actions">
+          <button class="multi-add-btn" id="addMultiPart" type="button">+ Add part type</button>
+          <span class="multi-help">The optimizer stacks boxes and arranges pallets to reach the best fill rate.</span>
+        </div>
+        <div class="multi-plan-summary" id="multiPlanSummary">Add at least two valid part types to generate the optimized load plan.</div>
+      </div>
+
+      <div class="block">
+        <div id="packingInfo" class="packing-info" style="display:none;"></div>
+        <div class="warning" id="warnDims" role="alert" aria-live="polite"></div>
+        <details class="constraint-panel" id="constraintPanel">
+          <summary class="constraint-panel-title">Current constraints</summary>
+          <div class="constraint-grid" id="constraintGrid"></div>
+        </details>
+      </div>
+    </div>
+    <div class="cargo-foot">
+      <p class="save-note">Changes save in this browser only. Use a share code in <button type="button" class="link-btn" id="saveNoteScenarios">Scenarios</button> to move them to another computer.</p>
+      <button class="ghost-btn" id="resetDefaults" type="button">Reset to defaults</button>
+    </div>
+  </aside>
+
+  <!-- Viewer -->
+  <main class="viewer visualization-card" id="stage" aria-label="3D load view">
+    <div class="viewport-wrap">
+      <div id="canvasViewport">
+        <canvas id="c" role="img" aria-label="Isometric loading visualization"></canvas>
+      </div>
+
+      <div class="float float-tl view-selector">
+        <span class="view-selector-label sr-text">View</span>
+        <div class="view-tabs" role="group" aria-label="Viewing angle">
+          <button class="view-tab active" type="button" data-view="isometric" aria-pressed="true">3D</button>
+          <button class="view-tab" type="button" data-view="top" aria-pressed="false">Top</button>
+          <button class="view-tab" type="button" data-view="side" aria-pressed="false">Side</button>
+          <button class="view-tab" type="button" data-view="front" aria-pressed="false">Front</button>
+          <button class="view-tab" type="button" data-view="rear" aria-pressed="false">Rear</button>
+        </div>
+      </div>
+
+      <div class="float float-tr viewer-actions">
+        <button class="float-btn" id="viewStyleToggle" type="button" aria-pressed="false" title="Switch to aesthetic view">
+          <span aria-hidden="true" class="hide">✦</span><strong id="viewStyleText">Switch to aesthetic</strong>
+        </button>
+        <button class="float-btn" id="emptyToggle" type="button" aria-pressed="true" title="Hide the empty space">Empty space</button>
+        <button class="float-btn icon" id="fullscreenToggle" type="button" aria-label="Enter full screen" title="Full screen">
+          <span id="fullscreenIcon" aria-hidden="true">⛶</span><span id="fullscreenText" class="sr-text">Full screen</span>
+        </button>
+      </div>
+
+      <div class="float float-br zoom-pill">
+        <button class="float-btn icon" id="zoomOut" type="button" aria-label="Zoom out">−</button>
+        <label class="zoom-control"><span class="sr-text">Zoom</span>
+          <input type="range" id="zoomSlider" min="50" max="400" value="100" step="1" aria-label="Visualization zoom">
+          <strong id="zoomVal">100%</strong>
+        </label>
+        <button class="float-btn icon" id="zoomIn" type="button" aria-label="Zoom in">+</button>
+        <button class="float-btn" id="resetView" type="button">Fit</button>
+      </div>
+
+      <span class="float float-bl viewport-hint">Drag to pan. Pinch or Ctrl + scroll to zoom.</span>
+    </div>
+
+    <div class="loader">
+      <button class="play-btn" id="playLoad" type="button" aria-label="Play loading sequence">
+        <svg class="i-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2.8v10.4L13 8z" fill="currentColor"/></svg>
+        <svg class="i-pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 3h3v10H4zM9 3h3v10H9z" fill="currentColor"/></svg>
+        <span id="playText">Play loading</span>
+      </button>
+      <button class="step-btn" id="palletMinus" type="button" aria-label="Remove one pallet">−</button>
+      <div class="controls-row"><label><span class="sr-text">Pallets on board</span><input type="range" id="slider" min="0" value="6" step="1"></label></div>
+      <button class="step-btn" id="palletPlus" type="button" aria-label="Add one pallet">+</button>
+      <span class="loader-count"><b id="sliderVal">6</b><span> of <span id="sliderMax">18</span> pallets</span></span>
+      <button class="primary-btn" id="palletMax" type="button">Load max</button>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-swatch" id="palletLegendSwatch" style="background:#A39580"></div><span id="palletLegendLabel">Pallet (wood)</span></div>
+      <div class="legend-item" id="boxLegendOdd"><div class="legend-swatch" style="background:#D6A461"></div><span id="boxLegendOddLabel">Boxes — odd layers</span></div>
+      <div class="legend-item" id="boxLegendEven"><div class="legend-swatch" style="background:#EDD3A2"></div><span>Boxes — even layers</span></div>
+      <div class="equipment-badge" id="equipmentBadge">Sea CTN 40' HC</div>
+    </div>
+  </main>
+
+  <!-- Results -->
+  <aside class="results" aria-label="Results">
+    <section class="r-section r-fill">
+      <div class="meter" id="volMeter">
+        <div class="meter-head"><span class="meter-name">Volume</span><strong class="meter-value" id="statFill">—</strong></div>
+        <div class="meter-bar" role="progressbar" aria-label="Volume fill" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="meter-fill"></div></div>
+        <span class="note">of usable volume</span>
+      </div>
+      <div class="meter" id="wtMeter">
+        <div class="meter-head"><span class="meter-name">Weight</span><strong class="meter-value" id="statWeightFill">—</strong></div>
+        <div class="meter-bar" role="progressbar" aria-label="Weight fill" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="meter-fill"></div></div>
+        <span class="note" id="statWeightFillNote">20,200 kg max</span>
+      </div>
+    </section>
+
+    <section class="r-section">
+      <h3>On board</h3>
+      <div class="stats-row">
+        <div class="stat">Pallets<strong id="statTotalPallets">—</strong><span class="note" id="statTotalPalletsNote">loaded / max</span></div>
+        <div class="stat">Pallet positions<strong id="statPal">—</strong><span class="note" id="statPalNote">occupied / max</span></div>
+        <div class="stat">Rows<strong id="statRows">—</strong><span class="note" id="statRowsNote">used / max</span></div>
+        <div class="stat">Boxes per pallet<strong id="statBpp">—</strong><span class="note" id="statBppNote">—</span></div>
+        <div class="stat">Total boxes<strong id="statBoxes">—</strong></div>
+        <div class="stat">Total parts<strong id="statParts">—</strong><span class="note" id="statPartsNote">QTY/SUT not set</span></div>
+        <div class="stat">Used volume<strong id="statVolU">—</strong></div>
+        <div class="stat">Used weight<strong id="statWeight">—</strong><span class="note" id="statWeightNote">part weight not set</span></div>
+      </div>
+    </section>
+
+    <section class="r-section" aria-labelledby="emptyTitle">
+      <h3 id="emptyTitle">Empty space</h3>
+      <div class="stats-row">
+        <div class="stat">Empty volume<strong id="statEmptyVol">—</strong><span class="note" id="statEmptyVolNote">of usable volume</span></div>
+        <div class="stat">Free floor length<strong id="statFreeLen">—</strong><span class="note" id="statFreeLenNote">beyond the last row</span></div>
+        <div class="stat">Headroom above load<strong id="statHeadroom">—</strong><span class="note">to the ceiling</span></div>
+        <div class="stat">Unused payload<strong id="statFreeWeight">—</strong><span class="note" id="statFreeWeightNote">part weight not set</span></div>
+      </div>
+    </section>
+    <section class="r-section r-last">
+      <button class="ghost-btn wide" id="copyExcel" type="button">
+        <svg viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true"><rect x="5" y="5" width="8.5" height="9" rx="1" stroke="currentColor" stroke-width="1.4"/><path d="M3 11V3a1 1 0 0 1 1-1h6" stroke="currentColor" stroke-width="1.4"/></svg>
+        Copy results for Excel
+      </button>
+    </section>
+  </aside>
+
+  <!-- Analysis -->
+  <section class="analysis" aria-label="Analysis">
+    <div class="tabs" role="tablist" aria-label="Analysis">
+      <button class="tab active" role="tab" id="tabInsight" aria-selected="true" aria-controls="panelInsight" type="button">Where the space goes</button>
+      <button class="tab" role="tab" id="tabDetails" aria-selected="false" aria-controls="panelDetails" type="button" tabindex="-1">All details</button>
+    </div>
+    <div class="tab-panel" role="tabpanel" id="panelInsight" aria-labelledby="tabInsight">
+      <h3 class="print-only">Where the space goes</h3>
+      <ul class="insight-list" id="insightList"></ul>
+    </div>
+    <div class="tab-panel summary-card" role="tabpanel" id="panelDetails" aria-labelledby="tabDetails" hidden>
+      <h3 class="print-only">All details</h3>
+      <dl class="info-grid" id="infoGrid"></dl>
+    </div>
+  </section>
+</div>
+
+<div class="site-foot-wrap">
+<footer class="site-footer">
+  <span class="footer-version">Version 2.0</span>
+  <p class="footer-disclaimer">For internal planning and visualization purposes only. Validate final loading plans against applicable safety, weight, securement, and site requirements. Saved settings are stored locally in the user’s browser and are not shared automatically with the HTML file.</p>
+  <span class="footer-credit">Created by Spratus</span>
+  <div class="footer-links">
+    <a href="index.html">Overview</a>
+    <a href="app.html">Simulator</a>
+  </div>
+</footer>
+</div>
+
+<div class="mobile-bar" id="mobileBar">
+  <span class="mobile-bar-text" id="mobileBarText">—</span>
+  <button type="button" id="mobileBarBtn">See 3D view</button>
+</div>
+
+<!-- Scenarios -->
+<dialog class="sheet" id="scenarioDialog" aria-labelledby="scenarioTitle">
+  <div class="sheet-head">
+    <div><h2 id="scenarioTitle">Scenarios</h2><p>Save setups you use often, reopen them in one click, and move them between computers with a share code.</p></div>
+    <button class="close-btn" type="button" data-close aria-label="Close">×</button>
+  </div>
+  <div class="sheet-body">
+    <div class="sheet-section">
+      <h3>Save the current setup</h3>
+      <form class="inline-form" id="scenarioForm">
+        <input class="text-input" id="scenarioName" type="text" maxlength="60" aria-label="Scenario name">
+        <button class="small-btn primary" type="submit" style="height:36px">Save scenario</button>
+      </form>
+    </div>
+    <div class="sheet-section">
+      <h3>Saved scenarios</h3>
+      <ul class="scenario-list" id="scenarioList"></ul>
+    </div>
+    <div class="sheet-section">
+      <h3>Share code</h3>
+      <p class="muted-p">Copy this code to bring your current setup and saved scenarios to another browser or computer.</p>
+      <textarea class="code-area" id="shareCodeOut" readonly aria-label="Share code"></textarea>
+      <div class="row-actions"><button class="small-btn" type="button" id="copyShareCode">Copy code</button><span class="msg" id="copyMsg" aria-live="polite"></span></div>
+      <h3 style="margin-top:14px">Import a share code</h3>
+      <textarea class="code-area" id="shareCodeIn" placeholder="Paste a share code here" aria-label="Paste share code"></textarea>
+      <div class="row-actions"><button class="small-btn primary" type="button" id="importShareCode">Import code</button><span class="msg" id="importMsg" aria-live="polite"></span></div>
+    </div>
+  </div>
+</dialog>
+
+<!-- Shortcuts -->
+<dialog class="sheet narrow" id="shortcutDialog" aria-labelledby="shortcutTitle">
+  <div class="sheet-head">
+    <div><h2 id="shortcutTitle">Keyboard shortcuts</h2><p>Work in the viewer without reaching for the mouse.</p></div>
+    <button class="close-btn" type="button" data-close aria-label="Close">×</button>
+  </div>
+  <div class="sheet-body">
+    <div class="kbd-list">
+      <span><kbd>1</kbd>–<kbd>5</kbd></span><span>3D, top, side, front, rear view</span>
+      <span><kbd>[</kbd> <kbd>]</kbd></span><span>Remove or add one pallet</span>
+      <span><kbd>M</kbd></span><span>Load max pallets</span>
+      <span><kbd>P</kbd></span><span>Play or pause the loading sequence</span>
+      <span><kbd>+</kbd> <kbd>−</kbd></span><span>Zoom in or out</span>
+      <span><kbd>0</kbd></span><span>Fit the view</span>
+      <span><kbd>R</kbd></span><span>Switch schematic and realistic look</span>
+      <span><kbd>F</kbd></span><span>Full screen</span>
+      <span><kbd>S</kbd></span><span>Open scenarios</span>
+      <span><kbd>E</kbd></span><span>Show or hide the empty space</span>
+      <span><kbd>?</kbd></span><span>Show this list</span>
+    </div>
+  </div>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"><span id="toastText"></span><button type="button" id="toastAction" class="hidden"></button></div>
+
+<script src="assets/app.js"></script>
+</body>
+</html>
