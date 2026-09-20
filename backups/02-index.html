@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Testing Loading Simulator — see what fits in a trailer, container or flatbed</title>
+<meta name="description" content="Enter pallet and box dimensions and see the load drawn in 3D: pallet positions, volume and weight fill, and the floor length, headroom and payload left over in a 48' or 53' trailer, a 20'–45' sea container, a flatbed or a 53' intermodal container.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Testing Loading Simulator">
+<meta property="og:title" content="Testing Loading Simulator — see what fits in a trailer, container or flatbed">
+<meta property="og:description" content="Enter pallet and box dimensions and see the load drawn in 3D, with the pallet positions used and the empty space left over.">
+<!-- TODO: add <link rel="canonical">, og:url and og:image once the Cloudflare Pages domain is fixed. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/base.css">
+<link rel="stylesheet" href="assets/site.css">
+<script src="assets/site.js"></script>
+</head>
+<body>
+
+<div class="site-strip">
+  <div class="site-strip-inner">
+    <a class="wordmark" href="index.html">
+      <svg viewBox="0 0 40 40" aria-hidden="true">
+        <rect x="2.5" y="9.5" width="35" height="23" rx="1.5" fill="none" stroke="currentColor" stroke-width="2.2"/>
+        <rect x="7" y="22" width="9" height="7" fill="currentColor"/>
+        <rect x="17.5" y="22" width="9" height="7" fill="currentColor" opacity=".55"/>
+        <rect x="7" y="14" width="9" height="7" fill="currentColor" opacity=".55"/>
+        <path d="M31 14v15" stroke="var(--amber)" stroke-width="2.4"/>
+      </svg>
+      <span>Testing Loading Simulator</span>
+    </a>
+    <nav class="site-nav" aria-label="Site">
+      <a href="index.html" aria-current="page">Overview</a>
+      <a href="app.html">Simulator</a>
+      <a href="#units">Units</a>
+      <a href="#limits">Limits</a>
+    </nav>
+    <button class="strip-btn" type="button" id="siteTheme" aria-label="Switch to dark mode"><span id="siteThemeText">Dark</span></button>
+  </div>
+</div>
+
+<main>
+
+  <!-- ── Hero ───────────────────────────────────────────────────────────── -->
+  <div class="hero-wrap">
+    <div class="shell">
+      <div class="plate-row">
+        <span class="plate">Load visualizer</span>
+        <span class="plate">9 transport units</span>
+        <span class="plate">in · ft³ · kg</span>
+      </div>
+      <h1 class="stencil hero-title">What fits, and what is left over</h1>
+    </div>
+    <div class="shell hero">
+      <div class="hero-copy">
+        <p class="lead">Enter your pallet and box dimensions. The simulator draws the load in 3D and reports the pallet positions used, how much of the usable volume is filled, and how much floor length, headroom and payload is still free.</p>
+        <div class="hero-actions">
+          <a class="btn-solid" href="app.html">Open the simulator</a>
+          <a class="btn-text" href="#units">See the interior dimensions</a>
+        </div>
+        <div class="hero-plates">
+          <span class="eyebrow">Worked example</span>
+          <p class="lead">A 48 × 45 in pallet in a 40' HC sea container: 2 across × 9 deep, so 18 pallet positions on the floor, against 2,529 ft³ of usable volume.</p>
+        </div>
+      </div>
+
+      <div class="demo">
+        <div class="demo-bar">
+          <b>Live — no sign-up</b>
+          <span>Pick a unit, then drag the pallet slider</span>
+        </div>
+        <iframe src="app.html?embed=1" title="Testing Loading Simulator, 3D load view"></iframe>
+        <p class="demo-note">The 3D view responds to touch, which would fight with scrolling here. <a class="btn-text" href="app.html">Open the full simulator</a> to use it on this screen.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="corr corr-band" aria-hidden="true"></div>
+
+  <!-- ── Outputs ────────────────────────────────────────────────────────── -->
+  <section class="sect">
+    <div class="shell">
+      <div class="sect-head">
+        <span class="eyebrow">What it reports</span>
+        <h2 class="stencil">Every number the load produces</h2>
+        <p>Each figure updates as you change a dimension, add a pallet or switch transport unit. The empty space is drawn in the 3D view as well as listed here.</p>
+      </div>
+      <dl class="specs">
+        <div class="spec">
+          <dt>Volume fill</dt><dd class="unit">%</dd>
+          <dd class="desc">Used volume against the unit's own usable figure, not its theoretical volume.</dd>
+        </div>
+        <div class="spec">
+          <dt>Weight fill</dt><dd class="unit">%</dd>
+          <dd class="desc">Loaded weight against the payload limit, once parts per box and weight per part are entered.</dd>
+        </div>
+        <div class="spec">
+          <dt>Pallet positions</dt><dd class="unit">used / max</dd>
+          <dd class="desc">Floor positions taken, and the most the pallet footprint allows in this unit.</dd>
+        </div>
+        <div class="spec">
+          <dt>Rows</dt><dd class="unit">used / max</dd>
+          <dd class="desc">Pallet rows counted from the front wall towards the doors.</dd>
+        </div>
+        <div class="spec">
+          <dt>Boxes per pallet</dt><dd class="unit">count</dd>
+          <dd class="desc">Boxes per layer multiplied by the layers that actually fit under the ceiling.</dd>
+        </div>
+        <div class="spec">
+          <dt>Empty volume</dt><dd class="unit">ft³</dd>
+          <dd class="desc">What is left of the usable volume, with the share it represents.</dd>
+        </div>
+        <div class="spec">
+          <dt>Free floor length</dt><dd class="unit">in</dd>
+          <dd class="desc">Floor beyond the last row, and roughly how many further pallet rows that is.</dd>
+        </div>
+        <div class="spec">
+          <dt>Headroom above load</dt><dd class="unit">in</dd>
+          <dd class="desc">Clear height from the top of the load to the ceiling.</dd>
+        </div>
+        <div class="spec">
+          <dt>Unused payload</dt><dd class="unit">kg</dd>
+          <dd class="desc">Payload still available before the limit is reached.</dd>
+        </div>
+        <div class="spec">
+          <dt>Load sheet</dt><dd class="unit">print · tsv</dd>
+          <dd class="desc">Print the view and the figures on one sheet, or copy the results as columns for Excel.</dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ── Units ──────────────────────────────────────────────────────────── -->
+  <section class="sect" id="units">
+    <div class="shell">
+      <div class="sect-head">
+        <span class="eyebrow">Built-in equipment</span>
+        <h2 class="stencil">Interior dimensions</h2>
+        <p>These are the figures the simulator ships with. Any of them can be overridden with your own interior dimensions and usable volume.</p>
+      </div>
+      <div class="table-scroll">
+        <table class="units">
+          <thead>
+            <tr>
+              <th scope="col">Transport unit</th>
+              <th scope="col" class="num">Length</th>
+              <th scope="col" class="num">Width</th>
+              <th scope="col" class="num">Height</th>
+              <th scope="col" class="num">Usable volume</th>
+              <th scope="col" class="num">48 × 45 positions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="u-name">Trailer 48'<span class="u-kind">Trailer</span></td><td class="num">576.0 in</td><td class="num">99.0 in</td><td class="num">110.0 in</td><td class="num">3,400 ft³</td><td class="num">24</td></tr>
+            <tr><td class="u-name">Trailer 53'<span class="u-kind">Trailer</span></td><td class="num">630.0 in</td><td class="num">99.0 in</td><td class="num">110.0 in</td><td class="num">3,700 ft³</td><td class="num">26</td></tr>
+            <tr><td class="u-name">Sea CTN 20' STD<span class="u-kind">Sea container</span></td><td class="num">232.3 in</td><td class="num">92.6 in</td><td class="num">94.3 in</td><td class="num">1,100 ft³</td><td class="num">8</td></tr>
+            <tr><td class="u-name">Sea CTN 40' STD<span class="u-kind">Sea container</span></td><td class="num">473.6 in</td><td class="num">92.6 in</td><td class="num">94.3 in</td><td class="num">2,250 ft³</td><td class="num">18</td></tr>
+            <tr><td class="u-name">Sea CTN 40' HC<span class="u-kind">Sea container</span></td><td class="num">473.6 in</td><td class="num">92.6 in</td><td class="num">106.3 in</td><td class="num">2,529 ft³</td><td class="num">18</td></tr>
+            <tr><td class="u-name">Sea CTN 45' HC<span class="u-kind">Sea container</span></td><td class="num">533.6 in</td><td class="num">92.6 in</td><td class="num">106.3 in</td><td class="num">2,850 ft³</td><td class="num">22</td></tr>
+            <tr><td class="u-name">Flatbed 48'<span class="u-kind">Flatbed</span></td><td class="num">573.0 in</td><td class="num">102.0 in</td><td class="num">100.0 in</td><td class="num">3,200 ft³</td><td class="num">22</td></tr>
+            <tr><td class="u-name">Flatbed 53'<span class="u-kind">Flatbed</span></td><td class="num">636.0 in</td><td class="num">102.0 in</td><td class="num">100.0 in</td><td class="num">3,500 ft³</td><td class="num">26</td></tr>
+            <tr><td class="u-name">Intermodal CNT 53'<span class="u-kind">Intermodal</span></td><td class="num">630.0 in</td><td class="num">98.0 in</td><td class="num">106.5 in</td><td class="num">3,550 ft³</td><td class="num">26</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="table-foot">Check these against your own equipment before relying on them. The last column assumes 48 × 45 in pallets laid with the 48 in side along the unit and no rotation, which is the rule single-part mode uses: <b>floor(width ÷ 45) × floor(length ÷ 48)</b>. Stacking pallets on each other multiplies it by the number of tiers that fit under the ceiling.</p>
+    </div>
+  </section>
+
+  <!-- ── Modes ──────────────────────────────────────────────────────────── -->
+  <section class="sect">
+    <div class="shell">
+      <div class="sect-head">
+        <span class="eyebrow">Two modes</span>
+        <h2 class="stencil">One box size, or a real order</h2>
+      </div>
+      <div class="modes">
+        <div class="mode">
+          <h3 class="stencil">Single part</h3>
+          <p>One box size on one pallet type, repeated through the unit. Set the box layers per pallet and how many pallet tiers to stack; both are capped at what the ceiling allows, and the simulator says so when it has capped them.</p>
+          <ul class="tick-list">
+            <li>Full or half pallet, wood or plastic, or your own dimensions</li>
+            <li>Box layers per pallet, capped to the height that fits</li>
+            <li>Pallet tiers, capped to the used stack height</li>
+            <li>Parts per box and weight per part, in kg or lb, both optional</li>
+            <li>The better of the two box orientations on the pallet deck</li>
+          </ul>
+        </div>
+        <div class="mode">
+          <h3 class="stencil">Multiple parts</h3>
+          <p>Exact quantities for several part types at once. Each part keeps its own pallet type and its own pallets — two part types never share a pallet.</p>
+          <ul class="tick-list">
+            <li>Quantity per part, counted in parts or in boxes</li>
+            <li>A ceiling on layers per pallet, set per part</li>
+            <li>Whether that part's pallets may be stacked on each other</li>
+            <li>Separate totals for parts, boxes and pallets per part type</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Limits ─────────────────────────────────────────────────────────── -->
+  <section class="sect" id="limits">
+    <div class="shell">
+      <div class="sect-head">
+        <span class="eyebrow">Scope</span>
+        <h2 class="stencil">What it does not do</h2>
+      </div>
+      <div class="notice">
+        <div class="hazard-rule"></div>
+        <div class="notice-body">
+          <p>It is a visualizer. It shows one configuration at a time and draws the consequence of it. It does not choose for you.</p>
+          <ul class="tick-list">
+            <li>It does not recommend a transport unit, a best fit or an optimal load.</li>
+            <li>It does not check securement, axle loads, weight distribution or legal limits.</li>
+            <li>Payload is measured against a single 20,200 kg limit for every unit, so on a 20' container or a flatbed read the weight meter as an estimate.</li>
+            <li>Your setup and saved scenarios stay in your browser's local storage. They are not uploaded.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<div class="site-foot-wrap">
+<footer class="site-footer">
+  <span class="footer-version">Version 2.0</span>
+  <p class="footer-disclaimer">For internal planning and visualization purposes only. Validate final loading plans against applicable safety, weight, securement, and site requirements. Saved settings are stored locally in the user’s browser and are not shared automatically with the HTML file.</p>
+  <span class="footer-credit">Created by Spratus</span>
+  <div class="footer-links">
+    <a href="index.html">Overview</a>
+    <a href="app.html">Simulator</a>
+    <a href="#units">Units</a>
+    <a href="#limits">Limits</a>
+  </div>
+</footer>
+</div>
+
+</body>
+</html>
