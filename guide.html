@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How many pallets fit in a 53' trailer or a 40' container?</title>
+<meta name="description" content="Pallet positions for 48 × 45, 48 × 40 GMA and 1200 × 800 mm Euro pallets across nine transport units, the arithmetic behind each number, and the reasons the real figure is often lower.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Testing Loading Simulator">
+<meta property="og:title" content="How many pallets fit in a 53' trailer or a 40' container?">
+<meta property="og:description" content="Pallet positions for six pallet sizes across nine transport units, with the arithmetic behind every number.">
+<!-- TODO: add <link rel="canonical">, og:url and og:image once the deployed domain is fixed. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/base.css">
+<link rel="stylesheet" href="assets/site.css">
+<script src="assets/site.js"></script>
+</head>
+<body>
+
+<div class="site-strip">
+  <div class="site-strip-inner">
+    <a class="wordmark" href="index.html">
+      <svg viewBox="0 0 40 40" aria-hidden="true">
+        <rect x="2.5" y="9.5" width="35" height="23" rx="1.5" fill="none" stroke="currentColor" stroke-width="2.2"/>
+        <rect x="7" y="22" width="9" height="7" fill="currentColor"/>
+        <rect x="17.5" y="22" width="9" height="7" fill="currentColor" opacity=".55"/>
+        <rect x="7" y="14" width="9" height="7" fill="currentColor" opacity=".55"/>
+        <path d="M31 14v15" stroke="var(--amber)" stroke-width="2.4"/>
+      </svg>
+      <span>Testing Loading Simulator</span>
+    </a>
+    <nav class="site-nav" aria-label="Site">
+      <a href="index.html">Overview</a>
+      <a href="app.html">Simulator</a>
+      <a href="guide.html" aria-current="page">Guide</a>
+      <a href="pricing.html">Pricing</a>
+    </nav>
+    <button class="strip-btn" type="button" id="siteTheme" aria-label="Switch to dark mode"><span id="siteThemeText">Dark</span></button>
+  </div>
+</div>
+
+<main>
+
+  <div class="shell page-head">
+    <span class="eyebrow">Guide</span>
+    <h1 class="stencil">How many pallets fit?</h1>
+    <p class="lead">Floor positions for six pallet sizes across nine transport units, the arithmetic behind every number, and the reasons the figure you actually load is often lower.</p>
+  </div>
+
+  <!-- ── The rule ───────────────────────────────────────────────────────── -->
+  <section class="sect">
+    <div class="shell">
+      <div class="sect-head">
+        <span class="eyebrow">The arithmetic</span>
+        <h2 class="stencil">Two divisions and a multiplication</h2>
+      </div>
+      <div class="prose">
+        <p>Floor positions come from the interior width and length against the pallet footprint. Nothing else is involved — not the boxes, not the weight, not the ceiling:</p>
+        <code class="formula">positions = floor(interior width ÷ pallet width)
+          × floor(interior length ÷ pallet length)</code>
+        <p>Both divisions round <strong>down</strong>, which is where most of the loss lives. A 53' trailer is 99 in wide inside; two 45 in pallets take 90 in and the remaining 9 in fits nothing. The same trailer is 630 in long, which is 13.1 pallets at 48 in — so 13 rows, and 0.1 of a row is wasted.</p>
+        <p>Height is a separate calculation, and it runs on the loaded pallet rather than the bare one:</p>
+        <code class="formula">loaded pallet height = pallet height + (box layers × box height)
+tiers = floor(interior height ÷ loaded pallet height)</code>
+        <p>Total pallets is then <strong>positions × tiers</strong>. The simulator caps layers and tiers at whatever the ceiling allows and tells you when it has had to.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Matrix ─────────────────────────────────────────────────────────── -->
+  <section class="sect" id="positions">
+    <div class="shell">
+      <div class="sect-head">
+        <span class="eyebrow">Floor positions</span>
+        <h2 class="stencil">Every pallet against every unit</h2>
+        <p>One tier only. Pallet sizes are in inches with the side that runs along the unit first, so <b>48 × 40</b> and <b>40 × 48</b> are the same pallet turned ninety degrees.</p>
+      </div>
+      <div class="table-scroll">
+        <table class="units matrix">
+          <thead>
+            <tr>
+              <th scope="col">Transport unit</th>
+              <th scope="col" class="num">48 × 45</th>
+              <th scope="col" class="num">48 × 40</th>
+              <th scope="col" class="num">40 × 48</th>
+              <th scope="col" class="num">47.2 × 31.5</th>
+              <th scope="col" class="num">31.5 × 47.2</th>
+              <th scope="col" class="num">24 × 45</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="u-name">Trailer 48'<span class="u-kind">Trailer</span></td><td class="num">24</td><td class="num">24</td><td class="num">28</td><td class="num">36</td><td class="num">36</td><td class="num">48</td></tr>
+            <tr><td class="u-name">Trailer 53'<span class="u-kind">Trailer</span></td><td class="num">26</td><td class="num">26</td><td class="num">30</td><td class="num">39</td><td class="num">40</td><td class="num">52</td></tr>
+            <tr><td class="u-name">Sea CTN 20' STD<span class="u-kind">Sea container</span></td><td class="num">8</td><td class="num">8</td><td class="num">5</td><td class="num">8</td><td class="num">7</td><td class="num">18</td></tr>
+            <tr><td class="u-name">Sea CTN 40' STD<span class="u-kind">Sea container</span></td><td class="num">18</td><td class="num">18</td><td class="num">11</td><td class="num">20</td><td class="num">15</td><td class="num">38</td></tr>
+            <tr><td class="u-name">Sea CTN 40' HC<span class="u-kind">Sea container</span></td><td class="num">18</td><td class="num">18</td><td class="num">11</td><td class="num">20</td><td class="num">15</td><td class="num">38</td></tr>
+            <tr><td class="u-name">Sea CTN 45' HC<span class="u-kind">Sea container</span></td><td class="num">22</td><td class="num">22</td><td class="num">13</td><td class="num">22</td><td class="num">16</td><td class="num">44</td></tr>
+            <tr><td class="u-name">Flatbed 48'<span class="u-kind">Flatbed</span></td><td class="num">22</td><td class="num">22</td><td class="num">28</td><td class="num">36</td><td class="num">36</td><td class="num">46</td></tr>
+            <tr><td class="u-name">Flatbed 53'<span class="u-kind">Flatbed</span></td><td class="num">26</td><td class="num">26</td><td class="num">30</td><td class="num">39</td><td class="num">40</td><td class="num">52</td></tr>
+            <tr><td class="u-name">Intermodal CNT 53'<span class="u-kind">Intermodal</span></td><td class="num">26</td><td class="num">26</td><td class="num">30</td><td class="num">39</td><td class="num">40</td><td class="num">52</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="table-foot"><b>48 × 45</b> the simulator's default full pallet · <b>48 × 40</b> GMA, stringers along the unit · <b>40 × 48</b> the same GMA pallet turned · <b>47.2 × 31.5</b> Euro EUR1, 1200 × 800 mm · <b>31.5 × 47.2</b> the same Euro pallet turned · <b>24 × 45</b> half pallet. Interior dimensions are the ones built into the simulator; check them against your own equipment.</p>
+    </div>
+  </section>
+
+  <!-- ── Worked example ─────────────────────────────────────────────────── -->
+  <section class="sect">
+    <div class="shell">
+      <div class="sect-head">
+        <span class="eyebrow">Worked example</span>
+        <h2 class="stencil">GMA pallets in a 53' trailer</h2>
+        <p>The most asked version of the question, run end to end. Interior 630 × 99 × 110 in; pallet 48 × 40 × 5 in; box 45 × 24 × 18 in.</p>
+      </div>
+      <div class="prose">
+        <ol class="steps">
+          <li>99 in of width ÷ 40 in pallet width = 2.47, so <strong>2 pallets across</strong>. The 19 in left over is not enough for a third.</li>
+          <li>630 in of length ÷ 48 in pallet length = 13.1, so <strong>13 rows deep</strong>.</li>
+          <li>2 × 13 = <strong>26 floor positions</strong>.</li>
+          <li>Turn every pallet so the 40 in side runs along the trailer: 99 ÷ 48 = 2.06, still 2 across, but 630 ÷ 40 = 15.75, so 15 deep. That is <strong>30 positions</strong> — four more, from nothing but orientation.</li>
+          <li>Four box layers on a pallet stands 5 + (4 × 18) = <strong>77 in</strong>. The ceiling is 110 in, so 110 ÷ 77 = 1.4: <strong>one tier</strong>. Total 26, or 30 turned.</li>
+          <li>Two tiers need a loaded pallet no taller than 55 in. Two box layers gives 5 + 36 = 41 in, so two tiers stand 82 in and clear the ceiling: <strong>52 pallets, or 60 turned</strong> — with the same eight boxes per position.</li>
+        </ol>
+        <p>Step 6 is the one worth sitting with. Splitting the same boxes across two shorter pallets doubles the pallet count without loading a single extra box, and costs 5 in of height to the second deck.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Caveats ────────────────────────────────────────────────────────── -->
+  <section class="sect" id="caveats">
+    <div class="shell">
+      <div class="sect-head">
+        <span class="eyebrow">Reality check</span>
+        <h2 class="stencil">Why you will load fewer</h2>
+      </div>
+      <div class="notice">
+        <div class="hazard-rule"></div>
+        <div class="notice-body">
+          <p>Every number above is geometry with nothing in the way. Five things routinely take some back:</p>
+          <ul class="tick-list">
+            <li><strong>Weight arrives before volume.</strong> Twenty-six pallets at 800 kg each is 20,800 kg, already past the 20,200 kg the simulator checks against. Dense cargo never reaches the position count.</li>
+            <li><strong>Mixed orientations are not modelled.</strong> The turned columns above rotate every pallet uniformly. Pinwheel and part-turned patterns can beat both columns, and single-part mode does not attempt them.</li>
+            <li><strong>Securement takes length.</strong> Load bars, airbags, dunnage and a gap at the doors all come out of the same 630 in.</li>
+            <li><strong>The door is narrower than the box.</strong> Interior width is not aperture width, and a pallet that fits the trailer still has to get through the opening.</li>
+            <li><strong>Usable volume is already discounted.</strong> A 40' HC is 2,694 ft³ in theory and the simulator uses 2,529 ft³ — the fill percentage is measured against the smaller figure.</li>
+          </ul>
+        </div>
+      </div>
+      <p style="margin-top:30px"><a class="btn-solid" href="app.html">Run your own numbers</a></p>
+    </div>
+  </section>
+
+</main>
+
+<div class="site-foot-wrap">
+<footer class="site-footer">
+  <span class="footer-version">Version 2.0</span>
+  <p class="footer-disclaimer">For internal planning and visualization purposes only. Validate final loading plans against applicable safety, weight, securement, and site requirements. Saved settings are stored locally in the user’s browser and are not shared automatically with the HTML file.</p>
+  <span class="footer-credit">Created by Spratus</span>
+  <div class="footer-links">
+    <a href="index.html">Overview</a>
+    <a href="app.html">Simulator</a>
+    <a href="guide.html">Guide</a>
+    <a href="pricing.html">Pricing</a>
+    <a href="privacy.html">Privacy</a>
+  </div>
+</footer>
+</div>
+
+</body>
+</html>

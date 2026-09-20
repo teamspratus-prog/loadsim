@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy — what this site stores</title>
+<meta name="description" content="The simulator runs entirely in your browser. No account, no cookies, no analytics. This page lists the four localStorage keys it writes and the one external request it makes.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Testing Loading Simulator">
+<meta property="og:title" content="Privacy — what this site stores">
+<meta property="og:description" content="No account, no cookies, no analytics. The four browser storage keys and the one external request, named.">
+<!-- TODO: add <link rel="canonical">, og:url and og:image once the deployed domain is fixed. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/base.css">
+<link rel="stylesheet" href="assets/site.css">
+<script src="assets/site.js"></script>
+</head>
+<body>
+
+<div class="site-strip">
+  <div class="site-strip-inner">
+    <a class="wordmark" href="index.html">
+      <svg viewBox="0 0 40 40" aria-hidden="true">
+        <rect x="2.5" y="9.5" width="35" height="23" rx="1.5" fill="none" stroke="currentColor" stroke-width="2.2"/>
+        <rect x="7" y="22" width="9" height="7" fill="currentColor"/>
+        <rect x="17.5" y="22" width="9" height="7" fill="currentColor" opacity=".55"/>
+        <rect x="7" y="14" width="9" height="7" fill="currentColor" opacity=".55"/>
+        <path d="M31 14v15" stroke="var(--amber)" stroke-width="2.4"/>
+      </svg>
+      <span>Testing Loading Simulator</span>
+    </a>
+    <nav class="site-nav" aria-label="Site">
+      <a href="index.html">Overview</a>
+      <a href="app.html">Simulator</a>
+      <a href="guide.html">Guide</a>
+      <a href="pricing.html">Pricing</a>
+    </nav>
+    <button class="strip-btn" type="button" id="siteTheme" aria-label="Switch to dark mode"><span id="siteThemeText">Dark</span></button>
+  </div>
+</div>
+
+<main>
+
+  <div class="shell page-head">
+    <span class="eyebrow">Privacy</span>
+    <h1 class="stencil">What this site stores</h1>
+    <p class="lead">The simulator is a set of static files that run in your browser. There is no account, no database and nowhere for your load data to go. This page names everything it writes and the one request it makes off your machine.</p>
+  </div>
+
+  <!-- ── Short version ──────────────────────────────────────────────────── -->
+  <section class="sect">
+    <div class="shell">
+      <div class="sect-head">
+        <span class="eyebrow">The short version</span>
+        <h2 class="stencil">It runs on your machine</h2>
+      </div>
+      <ul class="tick-list" style="max-width:66ch">
+        <li>No account, no email address, no sign-in</li>
+        <li>No cookies. The site sets none, and reads none</li>
+        <li>No analytics, no tracking pixels, no third-party scripts</li>
+        <li>Your dimensions, quantities and saved scenarios are never transmitted — the code contains no network calls at all</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ── Storage keys ───────────────────────────────────────────────────── -->
+  <section class="sect">
+    <div class="shell">
+      <div class="sect-head">
+        <span class="eyebrow">Browser storage</span>
+        <h2 class="stencil">Four keys, on your device</h2>
+        <p>The simulator writes these to your browser's <b>localStorage</b> so your setup survives a reload. They stay on the device that wrote them and are readable only by this site.</p>
+      </div>
+      <div style="max-width:76ch">
+        <div class="kv-row">
+          <code>gmlsContainerLoadingSimulatorStateV1</code>
+          <p>The current setup: transport unit and its interior dimensions, pallet and box dimensions, layers, tiers, parts per box, part weight, which panels are open, the zoom level and the view angle.</p>
+        </div>
+        <div class="kv-row">
+          <code>tlsScenariosV1</code>
+          <p>Scenarios you have saved by name, each holding a full copy of the setup above plus the date you saved it.</p>
+        </div>
+        <div class="kv-row">
+          <code>tlsShowEmptyV1</code>
+          <p>Whether the empty-space overlay is switched on. A single character.</p>
+        </div>
+        <div class="kv-row">
+          <code>containerTheme</code>
+          <p>Your light or dark choice, shared across every page on the site.</p>
+        </div>
+      </div>
+      <div class="prose" style="margin-top:26px">
+        <h3>If storage is unavailable</h3>
+        <p>Every read and write is wrapped so that a private window, blocked site data or a full disk cannot break the tool. It runs normally and simply forgets your setup between visits.</p>
+        <h3>Removing it</h3>
+        <p><strong>Reset to defaults</strong> in the Cargo panel clears the current setup but deliberately keeps your saved scenarios. To remove everything, clear site data for this domain in your browser settings — there is no server-side copy to request the deletion of.</p>
+        <h3>Share codes</h3>
+        <p>A share code is your setup and scenarios encoded as text in your own browser. It is not uploaded anywhere. Wherever you paste it, that destination sees it — so treat a code as you would the dimensions and quantities inside it.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── External requests ──────────────────────────────────────────────── -->
+  <section class="sect">
+    <div class="shell">
+      <div class="sect-head">
+        <span class="eyebrow">Off your machine</span>
+        <h2 class="stencil">One external request</h2>
+      </div>
+      <div class="notice">
+        <div class="hazard-rule"></div>
+        <div class="notice-body">
+          <p>The pages load two typefaces from Google Fonts — the stylesheet from <b>fonts.googleapis.com</b> and the font files from <b>fonts.gstatic.com</b>. Your browser makes those requests directly, which means your IP address, user agent and the referring page reach Google, governed by their privacy policy rather than this one. Nothing about your load is included.</p>
+          <p style="margin-top:12px">It is the only request the site makes to anyone. If you would rather it made none, the fonts can be self-hosted alongside the other files and the stack falls back to a real system face without them.</p>
+        </div>
+      </div>
+      <div class="prose" style="margin-top:26px">
+        <h3>Hosting</h3>
+        <!-- TODO: name the host and link its privacy or data-processing page once deployed. -->
+        <p>The files are served by a static host, which like any web server records ordinary request logs — IP address, timestamp, the page requested and the user agent. That is standard server operation and is separate from anything the simulator itself does.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Standing ───────────────────────────────────────────────────────── -->
+  <section class="sect">
+    <div class="shell">
+      <div class="prose">
+        <p><strong>This page describes how the software behaves</strong>, verified against the source rather than written from intent. It is not legal advice and it is not a substitute for a privacy policy reviewed for the jurisdictions you operate in.</p>
+        <p>Last updated 20 September 2026.</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<div class="site-foot-wrap">
+<footer class="site-footer">
+  <span class="footer-version">Version 2.0</span>
+  <p class="footer-disclaimer">For internal planning and visualization purposes only. Validate final loading plans against applicable safety, weight, securement, and site requirements. Saved settings are stored locally in the user’s browser and are not shared automatically with the HTML file.</p>
+  <span class="footer-credit">Created by Spratus</span>
+  <div class="footer-links">
+    <a href="index.html">Overview</a>
+    <a href="app.html">Simulator</a>
+    <a href="guide.html">Guide</a>
+    <a href="pricing.html">Pricing</a>
+    <a href="privacy.html">Privacy</a>
+  </div>
+</footer>
+</div>
+
+</body>
+</html>
