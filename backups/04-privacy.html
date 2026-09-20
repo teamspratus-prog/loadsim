@@ -12,7 +12,7 @@
 <!-- TODO: add <link rel="canonical">, og:url and og:image once the deployed domain is fixed. -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/tokens.css">
 <link rel="stylesheet" href="assets/base.css">
 <link rel="stylesheet" href="assets/site.css">
@@ -45,39 +45,36 @@
 <main>
 
   <div class="shell page-head">
-    <span class="label">Privacy</span>
-    <h1 class="display">What this site stores</h1>
+    <span class="eyebrow">Privacy</span>
+    <h1 class="stencil">What this site stores</h1>
     <p class="lead">The simulator is a set of static files that run in your browser. There is no account, no database and nowhere for your load data to go. This page names everything it writes and the one request it makes off your machine.</p>
   </div>
 
   <!-- ── Short version ──────────────────────────────────────────────────── -->
   <section class="sect">
-    <div class="shell sect-grid">
-      <div class="sect-aside">
-        <span class="label">The short version</span>
+    <div class="shell">
+      <div class="sect-head">
+        <span class="eyebrow">The short version</span>
+        <h2 class="stencil">It runs on your machine</h2>
       </div>
-      <div class="sect-main">
-        <h2 class="head">It runs on your machine</h2>
-<ul class="tick-list" style="max-width:66ch">
+      <ul class="tick-list" style="max-width:66ch">
         <li>No account, no email address, no sign-in</li>
         <li>No cookies. The site sets none, and reads none</li>
         <li>No analytics, no tracking pixels, no third-party scripts</li>
         <li>Your dimensions, quantities and saved scenarios are never transmitted — the code contains no network calls at all</li>
       </ul>
-      </div>
     </div>
   </section>
 
   <!-- ── Storage keys ───────────────────────────────────────────────────── -->
   <section class="sect">
-    <div class="shell sect-grid">
-      <div class="sect-aside">
-        <span class="label">Browser storage</span>
-      </div>
-      <div class="sect-main">
-        <h2 class="head">Four keys, on your device</h2>
+    <div class="shell">
+      <div class="sect-head">
+        <span class="eyebrow">Browser storage</span>
+        <h2 class="stencil">Four keys, on your device</h2>
         <p>The simulator writes these to your browser's <b>localStorage</b> so your setup survives a reload. They stay on the device that wrote them and are readable only by this site.</p>
-<div style="max-width:76ch">
+      </div>
+      <div style="max-width:76ch">
         <div class="kv-row">
           <code>gmlsContainerLoadingSimulatorStateV1</code>
           <p>The current setup: transport unit and its interior dimensions, pallet and box dimensions, layers, tiers, parts per box, part weight, which panels are open, the zoom level and the view angle.</p>
@@ -103,19 +100,17 @@
         <h3>Share codes</h3>
         <p>A share code is your setup and scenarios encoded as text in your own browser. It is not uploaded anywhere. Wherever you paste it, that destination sees it — so treat a code as you would the dimensions and quantities inside it.</p>
       </div>
-      </div>
     </div>
   </section>
 
   <!-- ── External requests ──────────────────────────────────────────────── -->
   <section class="sect">
-    <div class="shell sect-grid">
-      <div class="sect-aside">
-        <span class="label">Off your machine</span>
+    <div class="shell">
+      <div class="sect-head">
+        <span class="eyebrow">Off your machine</span>
+        <h2 class="stencil">One external request</h2>
       </div>
-      <div class="sect-main">
-        <h2 class="head">One external request</h2>
-<div class="notice">
+      <div class="notice">
         <div class="hazard-rule"></div>
         <div class="notice-body">
           <p>The pages load two typefaces from Google Fonts — the stylesheet from <b>fonts.googleapis.com</b> and the font files from <b>fonts.gstatic.com</b>. Your browser makes those requests directly, which means your IP address, user agent and the referring page reach Google, governed by their privacy policy rather than this one. Nothing about your load is included.</p>
@@ -126,7 +121,6 @@
         <h3>Hosting</h3>
         <!-- TODO: name the host and link its privacy or data-processing page once deployed. -->
         <p>The files are served by a static host, which like any web server records ordinary request logs — IP address, timestamp, the page requested and the user agent. That is standard server operation and is separate from anything the simulator itself does.</p>
-      </div>
       </div>
     </div>
   </section>

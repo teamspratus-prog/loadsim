@@ -12,7 +12,7 @@
 <!-- TODO: add <link rel="canonical">, og:url and og:image once the deployed domain is fixed. -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/tokens.css">
 <link rel="stylesheet" href="assets/base.css">
 <link rel="stylesheet" href="assets/site.css">
@@ -47,70 +47,55 @@
   <!-- ── Hero ───────────────────────────────────────────────────────────── -->
   <div class="hero-wrap">
     <div class="shell">
-      <span class="label">Load visualizer · 9 transport units · in / ft³ / kg</span>
-      <h1 class="display hero-title">What fits, and what is left over</h1>
-
-      <div class="hero-grid">
-        <div class="hero-copy">
-          <p class="lead">Enter your pallet and box dimensions. The simulator draws the load in 3D and reports the pallet positions used, how much of the usable volume is filled, and how much floor length, headroom and payload is still free.</p>
-          <div class="hero-actions">
-            <a class="btn-solid" href="app.html">Open the simulator</a>
-            <a class="btn-text" href="guide.html">How many pallets fit?</a>
-          </div>
-          <div class="spec-block">
-            <span class="label">Running in the frame</span>
-            <dl>
-              <dt>Unit</dt><dd>Sea CTN 40' HC</dd>
-              <dt>Interior</dt><dd>473.6 × 92.6 × 106.3 in</dd>
-              <dt>Pallet</dt><dd>48 × 45 × 5 in</dd>
-              <dt>Box</dt><dd>45 × 24 × 18 in</dd>
-              <dt>Stacking</dt><dd>4 layers · 1 tier</dd>
-            </dl>
+      <div class="plate-row">
+        <span class="plate">Load visualizer</span>
+        <span class="plate">9 transport units</span>
+        <span class="plate">in · ft³ · kg</span>
+      </div>
+      <h1 class="stencil hero-title">What fits, and what is left over</h1>
+    </div>
+    <div class="shell hero">
+      <div class="hero-copy">
+        <p class="lead">Enter your pallet and box dimensions. The simulator draws the load in 3D and reports the pallet positions used, how much of the usable volume is filled, and how much floor length, headroom and payload is still free.</p>
+        <div class="hero-actions">
+          <a class="btn-solid" href="app.html">Open the simulator</a>
+          <a class="btn-text" href="#units">See the interior dimensions</a>
+        </div>
+        <div class="hero-block">
+          <span class="eyebrow">Worked example</span>
+          <p class="lead">A 48 × 45 in pallet in a 40' HC sea container: 2 across × 9 deep, so 18 pallet positions on the floor, against 2,529 ft³ of usable volume.</p>
+          <div class="plate-row">
+            <span class="plate">Pallet <strong>48 × 45 × 5</strong></span>
+            <span class="plate">Box <strong>45 × 24 × 18</strong></span>
+            <span class="plate"><strong>4</strong> layers</span>
+            <span class="plate"><strong>1</strong> tier</span>
           </div>
         </div>
+      </div>
 
-        <div class="demo">
-          <div class="demo-bar">
-            <b>Live — no sign-up</b>
-            <span>Pick a unit, then drag the pallet slider</span>
-          </div>
-          <iframe src="app.html?embed=1" title="Testing Loading Simulator, 3D load view"></iframe>
-          <p class="demo-note">The 3D view responds to touch, which would fight with scrolling here. <a class="btn-text" href="app.html">Open the full simulator</a> to use it on this screen.</p>
+      <div class="demo">
+        <div class="demo-bar">
+          <b>Live — no sign-up</b>
+          <span>Pick a unit, then drag the pallet slider</span>
         </div>
+        <iframe src="app.html?embed=1" title="Testing Loading Simulator, 3D load view"></iframe>
+        <p class="demo-note">The 3D view responds to touch, which would fight with scrolling here. <a class="btn-text" href="app.html">Open the full simulator</a> to use it on this screen.</p>
       </div>
     </div>
   </div>
 
-  <!-- ── Stat band: cold open, no heading ───────────────────────────────── -->
-  <div class="statband">
-    <div class="shell statband-inner">
-      <div class="stat-cell">
-        <span class="stat-num">6<span class="u">/ 18</span></span>
-        <p class="stat-cap">pallet positions used, of the <b>18</b> a 48 × 45 pallet allows on this floor</p>
-      </div>
-      <div class="stat-cell">
-        <span class="stat-num">329.6<span class="u">in</span></span>
-        <p class="stat-cap">of floor length still free beyond the last row, out of <b>473.6 in</b></p>
-      </div>
-      <div class="stat-cell">
-        <span class="stat-num">1,952<span class="u">ft³</span></span>
-        <p class="stat-cap">empty — <b>77%</b> of the 2,529 ft³ this container can actually use</p>
-      </div>
-    </div>
-  </div>
+  <div class="corr corr-band" aria-hidden="true"></div>
 
-  <!-- ── Empty space: side-head, drawing runs past the container ────────── -->
-  <section class="sect sect--open sect--bleed" id="space">
-    <div class="shell sect-grid">
-      <div class="sect-aside">
-        <span class="label">The point of it</span>
-        <p>Drawn to the same 30° projection the simulator's own canvas uses, from the configuration running in the frame above.</p>
+  <!-- ── Empty space ────────────────────────────────────────────────────── -->
+  <section class="sect" id="space">
+    <div class="shell">
+      <div class="sect-head">
+        <span class="eyebrow">The point of it</span>
+        <h2 class="stencil">The empty space is the answer</h2>
+        <p>A fill percentage tells you there is room left. It does not tell you whether that room is a stretch of open floor at the doors or a band of headroom over the whole load — and those two need different decisions. The simulator draws both.</p>
       </div>
-      <div class="sect-main">
-        <h2 class="head">A fill percentage will not tell you where the room is</h2>
-        <p>Open floor at the doors and a band of headroom over the whole load are both “23% full”, and they need opposite decisions. One takes another row; the other takes taller pallets, or nothing at all.</p>
-        <figure class="fig bleed-r" style="margin-top:34px">
-          <svg class="dg" role="img" aria-label="A 40 foot high cube container loaded with 6 of its 18 pallet positions. 329.6 inches of floor length stay free beyond the last row and 29.3 inches of headroom stay open above the load." viewBox="-93.3 -112.7 430.9 356.2" xmlns="http://www.w3.org/2000/svg">
+      <figure class="fig fig-wide">
+        <svg class="dg" role="img" aria-label="A 40 foot high cube container loaded with 6 of its 18 pallet positions. 329.6 inches of floor length stay free beyond the last row and 29.3 inches of headroom stay open above the load." viewBox="-93.3 -112.7 430.9 356.2" xmlns="http://www.w3.org/2000/svg">
     <polygon points="0,0 303.5,175.2 244.2,209.5 -59.3,34.3" fill="var(--dg-floor)"/>
     <polygon points="0,0 303.5,175.2 303.5,96.6 0,-78.7" fill="var(--dg-wall)"/>
     <polygon points="0,0 -59.3,34.3 -59.3,-44.4 0,-78.7" fill="var(--dg-wall)"/>
@@ -302,43 +287,46 @@
     <line x1="15.9" y1="117" x2="227.2" y2="238.9" stroke="var(--dg-rule)" stroke-width="1.2" stroke-dasharray="4 4" stroke-linecap="round"/>
     <line x1="18.9" y1="111.8" x2="12.9" y2="122.2" stroke="var(--dg-rule)" stroke-width="1.4" stroke-linecap="round"/>
     <line x1="230.2" y1="233.7" x2="224.2" y2="244.1" stroke="var(--dg-rule)" stroke-width="1.4" stroke-linecap="round"/>
-    <g><rect x="42.3" y="167" width="158.5" height="22" rx="2" fill="var(--dg-tagbg)" stroke="var(--accent)" stroke-width="1"/><text x="121.6" y="178" text-anchor="middle" dominant-baseline="central" font-size="12" font-weight="600" fill="var(--dg-tagink)">329.6 in free floor</text></g>
+    <g><rect x="54.7" y="167.5" width="133.7" height="21" rx="2" fill="var(--dg-tagbg)" stroke="var(--accent)" stroke-width="1"/><text x="121.6" y="178" text-anchor="middle" dominant-baseline="central" font-size="12.5" font-weight="700" fill="var(--dg-tagink)">329.6 in free floor</text></g>
     <line x1="76.9" y1="30.6" x2="76.9" y2="8.9" stroke="var(--dg-rule)" stroke-width="1.2" stroke-dasharray="4 4" stroke-linecap="round"/>
     <line x1="70.9" y1="30.6" x2="82.9" y2="30.6" stroke="var(--dg-rule)" stroke-width="1.4" stroke-linecap="round"/>
     <line x1="70.9" y1="8.9" x2="82.9" y2="8.9" stroke="var(--dg-rule)" stroke-width="1.4" stroke-linecap="round"/>
-    <g><rect x="76.9" y="8.7" width="136" height="22" rx="2" fill="var(--dg-tagbg)" stroke="var(--accent)" stroke-width="1"/><text x="144.9" y="19.7" text-anchor="middle" dominant-baseline="central" font-size="12" font-weight="600" fill="var(--dg-tagink)">29.3 in headroom</text></g>
+    <g><rect x="76.9" y="9.2" width="114.8" height="21" rx="2" fill="var(--dg-tagbg)" stroke="var(--accent)" stroke-width="1"/><text x="134.3" y="19.7" text-anchor="middle" dominant-baseline="central" font-size="12.5" font-weight="700" fill="var(--dg-tagink)">29.3 in headroom</text></g>
     
   </svg>
-          <figcaption>Six of the eighteen pallet positions in a 40' HC, four box layers on each. The simulator reports <b>329.6 in</b> of free floor beyond the last row and <b>29.3 in</b> of headroom above the load.</figcaption>
-        </figure>
-      </div>
+        <figcaption>Six of the eighteen pallet positions in a 40' HC, with four box layers on each pallet. 329.6 in of floor stays free beyond the last row and 29.3 in of headroom stays open above the load — 1,952 ft³ of the 2,529 ft³ usable volume. These are the figures the simulator reports for this configuration, which is the one running in the frame above.</figcaption>
+      </figure>
     </div>
   </section>
 
-  <!-- ── Outputs: dense, no side-head ───────────────────────────────────── -->
-  <section class="sect sect--tight">
+  <!-- ── Outputs ────────────────────────────────────────────────────────── -->
+  <section class="sect">
     <div class="shell">
-      <h2 class="head-sm" style="margin-bottom:18px">Everything it reports, every time you change a dimension</h2>
+      <div class="sect-head">
+        <span class="eyebrow">What it reports</span>
+        <h2 class="stencil">Every number the load produces</h2>
+        <p>Each figure updates as you change a dimension, add a pallet or switch transport unit.</p>
+      </div>
       <dl class="specs">
         <div class="spec">
           <dt>Volume fill</dt><dd class="unit">%</dd>
-          <dd class="desc">Against the unit's own usable figure, not its theoretical volume.</dd>
+          <dd class="desc">Used volume against the unit's own usable figure, not its theoretical volume.</dd>
         </div>
         <div class="spec">
           <dt>Weight fill</dt><dd class="unit">%</dd>
-          <dd class="desc">Against the payload limit, once parts per box and weight per part are entered.</dd>
+          <dd class="desc">Loaded weight against the payload limit, once parts per box and weight per part are entered.</dd>
         </div>
         <div class="spec">
           <dt>Pallet positions</dt><dd class="unit">used / max</dd>
-          <dd class="desc">Floor positions taken, and the most the pallet footprint allows here.</dd>
+          <dd class="desc">Floor positions taken, and the most the pallet footprint allows in this unit.</dd>
         </div>
         <div class="spec">
           <dt>Rows</dt><dd class="unit">used / max</dd>
-          <dd class="desc">Counted from the front wall towards the doors.</dd>
+          <dd class="desc">Pallet rows counted from the front wall towards the doors.</dd>
         </div>
         <div class="spec">
           <dt>Boxes per pallet</dt><dd class="unit">count</dd>
-          <dd class="desc">Boxes per layer × the layers that actually fit under the ceiling.</dd>
+          <dd class="desc">Boxes per layer multiplied by the layers that actually fit under the ceiling.</dd>
         </div>
         <div class="spec">
           <dt>Empty volume</dt><dd class="unit">ft³</dd>
@@ -346,7 +334,7 @@
         </div>
         <div class="spec">
           <dt>Free floor length</dt><dd class="unit">in</dd>
-          <dd class="desc">Beyond the last row, and roughly how many further pallet rows that is.</dd>
+          <dd class="desc">Floor beyond the last row, and roughly how many further pallet rows that is.</dd>
         </div>
         <div class="spec">
           <dt>Headroom above load</dt><dd class="unit">in</dd>
@@ -354,89 +342,85 @@
         </div>
         <div class="spec">
           <dt>Unused payload</dt><dd class="unit">kg</dd>
-          <dd class="desc">Still available before the limit is reached.</dd>
+          <dd class="desc">Payload still available before the limit is reached.</dd>
         </div>
         <div class="spec">
-          <dt>Load sheet</dt><dd class="unit">print / tsv</dd>
-          <dd class="desc">Print the view and the figures on one sheet, or copy the results for Excel.</dd>
+          <dt>Load sheet</dt><dd class="unit">print · tsv</dd>
+          <dd class="desc">Print the view and the figures on one sheet, or copy the results as columns for Excel.</dd>
         </div>
       </dl>
     </div>
   </section>
 
-  <!-- ── Units: the table is the content, the caveat takes the margin ───── -->
-  <section class="sect sect--tight" id="units">
-    <div class="shell sect-grid">
-      <div class="sect-aside">
-        <span class="label">Built-in equipment</span>
-        <p>Positions assume 48 × 45 in pallets with the 48 in side along the unit and no rotation, which is the rule single-part mode uses.</p>
-        <div class="plate-row"><span class="plate">floor(W ÷ 45) × floor(L ÷ 48)</span></div>
+  <!-- ── Units ──────────────────────────────────────────────────────────── -->
+  <section class="sect" id="units">
+    <div class="shell">
+      <div class="sect-head">
+        <span class="eyebrow">Built-in equipment</span>
+        <h2 class="stencil">Interior dimensions</h2>
+        <p>These are the figures the simulator ships with. Any of them can be overridden with your own interior dimensions and usable volume.</p>
       </div>
-      <div class="sect-main">
-        <h2 class="head-sm" style="margin-bottom:18px">Interior dimensions</h2>
-        <div class="table-scroll">
-          <table class="units">
-            <thead>
-              <tr>
-                <th scope="col">Transport unit</th>
-                <th scope="col" class="num">Length <span class="th-unit">in</span></th>
-                <th scope="col" class="num">Width <span class="th-unit">in</span></th>
-                <th scope="col" class="num">Height <span class="th-unit">in</span></th>
-                <th scope="col" class="num">Usable <span class="th-unit">ft³</span></th>
-                <th scope="col" class="num">Positions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td class="u-name">Trailer 48'<span class="u-kind">Trailer</span></td><td class="num">576.0</td><td class="num">99.0</td><td class="num">110.0</td><td class="num">3,400</td><td class="num">24</td></tr>
-              <tr><td class="u-name">Trailer 53'<span class="u-kind">Trailer</span></td><td class="num">630.0</td><td class="num">99.0</td><td class="num">110.0</td><td class="num">3,700</td><td class="num">26</td></tr>
-              <tr><td class="u-name">Sea CTN 20' STD<span class="u-kind">Sea container</span></td><td class="num">232.3</td><td class="num">92.6</td><td class="num">94.3</td><td class="num">1,100</td><td class="num">8</td></tr>
-              <tr><td class="u-name">Sea CTN 40' STD<span class="u-kind">Sea container</span></td><td class="num">473.6</td><td class="num">92.6</td><td class="num">94.3</td><td class="num">2,250</td><td class="num">18</td></tr>
-              <tr><td class="u-name">Sea CTN 40' HC<span class="u-kind">Sea container</span></td><td class="num">473.6</td><td class="num">92.6</td><td class="num">106.3</td><td class="num">2,529</td><td class="num">18</td></tr>
-              <tr><td class="u-name">Sea CTN 45' HC<span class="u-kind">Sea container</span></td><td class="num">533.6</td><td class="num">92.6</td><td class="num">106.3</td><td class="num">2,850</td><td class="num">22</td></tr>
-              <tr><td class="u-name">Flatbed 48'<span class="u-kind">Flatbed</span></td><td class="num">573.0</td><td class="num">102.0</td><td class="num">100.0</td><td class="num">3,200</td><td class="num">22</td></tr>
-              <tr><td class="u-name">Flatbed 53'<span class="u-kind">Flatbed</span></td><td class="num">636.0</td><td class="num">102.0</td><td class="num">100.0</td><td class="num">3,500</td><td class="num">26</td></tr>
-              <tr><td class="u-name">Intermodal CNT 53'<span class="u-kind">Intermodal</span></td><td class="num">630.0</td><td class="num">98.0</td><td class="num">106.5</td><td class="num">3,550</td><td class="num">26</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <p class="table-foot">Any of these can be overridden with your own interior dimensions and usable volume. Stacking pallets multiplies the last column by the tiers that fit under the ceiling — the <a href="guide.html" class="btn-text">full pallet matrix</a> covers six footprints.</p>
+      <div class="table-scroll">
+        <table class="units">
+          <thead>
+            <tr>
+              <th scope="col">Transport unit</th>
+              <th scope="col" class="num">Length <span class="th-unit">in</span></th>
+              <th scope="col" class="num">Width <span class="th-unit">in</span></th>
+              <th scope="col" class="num">Height <span class="th-unit">in</span></th>
+              <th scope="col" class="num">Usable <span class="th-unit">ft³</span></th>
+              <th scope="col" class="num">48 × 45 positions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="u-name">Trailer 48'<span class="u-kind">Trailer</span></td><td class="num">576.0</td><td class="num">99.0</td><td class="num">110.0</td><td class="num">3,400</td><td class="num">24</td></tr>
+            <tr><td class="u-name">Trailer 53'<span class="u-kind">Trailer</span></td><td class="num">630.0</td><td class="num">99.0</td><td class="num">110.0</td><td class="num">3,700</td><td class="num">26</td></tr>
+            <tr><td class="u-name">Sea CTN 20' STD<span class="u-kind">Sea container</span></td><td class="num">232.3</td><td class="num">92.6</td><td class="num">94.3</td><td class="num">1,100</td><td class="num">8</td></tr>
+            <tr><td class="u-name">Sea CTN 40' STD<span class="u-kind">Sea container</span></td><td class="num">473.6</td><td class="num">92.6</td><td class="num">94.3</td><td class="num">2,250</td><td class="num">18</td></tr>
+            <tr><td class="u-name">Sea CTN 40' HC<span class="u-kind">Sea container</span></td><td class="num">473.6</td><td class="num">92.6</td><td class="num">106.3</td><td class="num">2,529</td><td class="num">18</td></tr>
+            <tr><td class="u-name">Sea CTN 45' HC<span class="u-kind">Sea container</span></td><td class="num">533.6</td><td class="num">92.6</td><td class="num">106.3</td><td class="num">2,850</td><td class="num">22</td></tr>
+            <tr><td class="u-name">Flatbed 48'<span class="u-kind">Flatbed</span></td><td class="num">573.0</td><td class="num">102.0</td><td class="num">100.0</td><td class="num">3,200</td><td class="num">22</td></tr>
+            <tr><td class="u-name">Flatbed 53'<span class="u-kind">Flatbed</span></td><td class="num">636.0</td><td class="num">102.0</td><td class="num">100.0</td><td class="num">3,500</td><td class="num">26</td></tr>
+            <tr><td class="u-name">Intermodal CNT 53'<span class="u-kind">Intermodal</span></td><td class="num">630.0</td><td class="num">98.0</td><td class="num">106.5</td><td class="num">3,550</td><td class="num">26</td></tr>
+          </tbody>
+        </table>
       </div>
+      <p class="table-foot">Check these against your own equipment before relying on them. The last column assumes 48 × 45 in pallets laid with the 48 in side along the unit and no rotation, which is the rule single-part mode uses: <b>floor(width ÷ 45) × floor(length ÷ 48)</b>. Stacking pallets on each other multiplies it by the number of tiers that fit under the ceiling.</p>
     </div>
   </section>
 
   <!-- ── Modes ──────────────────────────────────────────────────────────── -->
   <section class="sect">
-    <div class="shell sect-grid">
-      <div class="sect-aside">
-        <span class="label">Two modes</span>
+    <div class="shell">
+      <div class="sect-head">
+        <span class="eyebrow">Two modes</span>
+        <h2 class="stencil">One box size, or a real order</h2>
       </div>
-      <div class="sect-main">
-        <h2 class="head">One box size, or a real order</h2>
-        <div class="modes" style="margin-top:30px">
-          <div class="mode">
-            <h3 class="head-sm">Single part</h3>
-            <p>One box size on one pallet type, repeated through the unit. Set the box layers per pallet and how many pallet tiers to stack; both are capped at what the ceiling allows, and the simulator says so when it has capped them.</p>
-            <ul class="tick-list">
-              <li>Full or half pallet, wood or plastic, or your own dimensions</li>
-              <li>Box layers per pallet, capped to the height that fits</li>
-              <li>Pallet tiers, capped to the used stack height</li>
-              <li>Parts per box and weight per part, in kg or lb, both optional</li>
-              <li>The better of the two box orientations on the pallet deck</li>
-            </ul>
-          </div>
-          <div class="mode">
-            <h3 class="head-sm">Multiple parts</h3>
-            <p>Exact quantities for several part types at once. Each part keeps its own pallet type and its own pallets — two part types never share a pallet.</p>
-            <ul class="tick-list">
-              <li>Quantity per part, counted in parts or in boxes</li>
-              <li>A ceiling on layers per pallet, set per part</li>
-              <li>Whether that part's pallets may be stacked on each other</li>
-              <li>Separate totals for parts, boxes and pallets per part type</li>
-            </ul>
-          </div>
+      <div class="modes">
+        <div class="mode">
+          <h3 class="stencil">Single part</h3>
+          <p>One box size on one pallet type, repeated through the unit. Set the box layers per pallet and how many pallet tiers to stack; both are capped at what the ceiling allows, and the simulator says so when it has capped them.</p>
+          <ul class="tick-list">
+            <li>Full or half pallet, wood or plastic, or your own dimensions</li>
+            <li>Box layers per pallet, capped to the height that fits</li>
+            <li>Pallet tiers, capped to the used stack height</li>
+            <li>Parts per box and weight per part, in kg or lb, both optional</li>
+            <li>The better of the two box orientations on the pallet deck</li>
+          </ul>
         </div>
-        <figure class="fig" style="margin-top:44px">
-          <svg class="dg" role="img" aria-label="Left: four box layers on one pallet, 77 inches tall. Right: two box layers on each of two stacked pallets, 82 inches tall, because the second pallet adds its own 5 inch deck." viewBox="-223.5 -153 587.4 306.8" xmlns="http://www.w3.org/2000/svg">
+        <div class="mode">
+          <h3 class="stencil">Multiple parts</h3>
+          <p>Exact quantities for several part types at once. Each part keeps its own pallet type and its own pallets — two part types never share a pallet.</p>
+          <ul class="tick-list">
+            <li>Quantity per part, counted in parts or in boxes</li>
+            <li>A ceiling on layers per pallet, set per part</li>
+            <li>Whether that part's pallets may be stacked on each other</li>
+            <li>Separate totals for parts, boxes and pallets per part type</li>
+          </ul>
+        </div>
+      </div>
+      <figure class="fig" style="margin-top:40px">
+        <svg class="dg" role="img" aria-label="Left: four box layers on one pallet, 77 inches tall. Right: two box layers on each of two stacked pallets, 82 inches tall, because the second pallet adds its own 5 inch deck." viewBox="-223.5 -153 587.4 306.8" xmlns="http://www.w3.org/2000/svg">
     <polygon points="0,-7.5 62.4,28.5 3.9,62.2 -58.5,26.2" fill="#A39580" stroke="var(--dg-edge)" stroke-width="0.9" stroke-linejoin="round"/>
     <polygon points="-58.5,33.7 3.9,69.7 3.9,62.2 -58.5,26.2" fill="#766A58" stroke="var(--dg-edge)" stroke-width="0.9" stroke-linejoin="round"/>
     <polygon points="62.4,36 3.9,69.7 3.9,62.2 62.4,28.5" fill="#524939" stroke="var(--dg-edge)" stroke-width="0.9" stroke-linejoin="round"/>
@@ -467,8 +451,8 @@
     <line x1="-88.5" y1="33.7" x2="-88.5" y2="-81.7" stroke="var(--dg-rule)" stroke-width="1.2" stroke-dasharray="4 4" stroke-linecap="round"/>
     <line x1="-94.5" y1="33.7" x2="-82.5" y2="33.7" stroke="var(--dg-rule)" stroke-width="1.4" stroke-linecap="round"/>
     <line x1="-94.5" y1="-81.7" x2="-82.5" y2="-81.7" stroke="var(--dg-rule)" stroke-width="1.4" stroke-linecap="round"/>
-    <g><rect x="-115.2" y="-35" width="53.5" height="22" rx="2" fill="var(--dg-tagbg)" stroke="var(--accent)" stroke-width="1"/><text x="-88.5" y="-24" text-anchor="middle" dominant-baseline="central" font-size="12" font-weight="600" fill="var(--dg-tagink)">77 in</text></g>
-    <text x="1.9" y="115.7" class="lbl" text-anchor="middle" font-size="14" font-weight="600" fill="currentColor">4 box layers, 1 tier</text>
+    <g><rect x="-111.2" y="-34.5" width="45.5" height="21" rx="2" fill="var(--dg-tagbg)" stroke="var(--accent)" stroke-width="1"/><text x="-88.5" y="-24" text-anchor="middle" dominant-baseline="central" font-size="12.5" font-weight="700" fill="var(--dg-tagink)">77 in</text></g>
+    <text x="1.9" y="115.7" text-anchor="middle" font-size="13.5" font-weight="700" fill="currentColor">4 box layers, 1 tier</text>
     <g transform="translate(260,0)">
     <polygon points="0,-7.5 62.4,28.5 3.9,62.2 -58.5,26.2" fill="#A39580" stroke="var(--dg-edge)" stroke-width="0.9" stroke-linejoin="round"/>
     <polygon points="-58.5,33.7 3.9,69.7 3.9,62.2 -58.5,26.2" fill="#766A58" stroke="var(--dg-edge)" stroke-width="0.9" stroke-linejoin="round"/>
@@ -503,33 +487,33 @@
     <line x1="-88.5" y1="33.7" x2="-88.5" y2="-89.2" stroke="var(--dg-rule)" stroke-width="1.2" stroke-dasharray="4 4" stroke-linecap="round"/>
     <line x1="-94.5" y1="33.7" x2="-82.5" y2="33.7" stroke="var(--dg-rule)" stroke-width="1.4" stroke-linecap="round"/>
     <line x1="-94.5" y1="-89.2" x2="-82.5" y2="-89.2" stroke="var(--dg-rule)" stroke-width="1.4" stroke-linecap="round"/>
-    <g><rect x="-115.2" y="-38.7" width="53.5" height="22" rx="2" fill="var(--dg-tagbg)" stroke="var(--accent)" stroke-width="1"/><text x="-88.5" y="-27.8" text-anchor="middle" dominant-baseline="central" font-size="12" font-weight="600" fill="var(--dg-tagink)">82 in</text></g>
-    <text x="1.9" y="115.7" class="lbl" text-anchor="middle" font-size="14" font-weight="600" fill="currentColor">2 box layers, 2 tiers</text>
+    <g><rect x="-111.2" y="-38.2" width="45.5" height="21" rx="2" fill="var(--dg-tagbg)" stroke="var(--accent)" stroke-width="1"/><text x="-88.5" y="-27.8" text-anchor="middle" dominant-baseline="central" font-size="12.5" font-weight="700" fill="var(--dg-tagink)">82 in</text></g>
+    <text x="1.9" y="115.7" text-anchor="middle" font-size="13.5" font-weight="700" fill="currentColor">2 box layers, 2 tiers</text>
     </g>
   </svg>
-          <figcaption><b>Layers</b> stack boxes on one pallet; <b>tiers</b> stack loaded pallets on each other. Four layers on a single pallet stands 77 in. The same eight boxes split across two stacked pallets stands 82 in, because the second pallet adds its own 5 in deck. In a 40' HC that is harmless; in a 94.3 in standard container it spends 5 of the 17 in you had left.</figcaption>
-        </figure>
-      </div>
+        <figcaption><b>Layers</b> stack boxes on one pallet; <b>tiers</b> stack loaded pallets on each other. Four layers on a single pallet stands 77 in. The same eight boxes split across two stacked pallets stands 82 in, because the second pallet adds its own 5 in deck — In a 40' HC that difference is harmless; in a 94.3 in standard container it spends 5 of the 17 in you had left.</figcaption>
+      </figure>
     </div>
   </section>
 
-  <!-- ── Limits: inverted band ──────────────────────────────────────────── -->
-  <section class="sect sect--band band" id="limits">
-    <div class="shell sect-grid">
-      <div class="sect-aside">
-        <span class="label">Scope</span>
+  <!-- ── Limits ─────────────────────────────────────────────────────────── -->
+  <section class="sect" id="limits">
+    <div class="shell">
+      <div class="sect-head">
+        <span class="eyebrow">Scope</span>
+        <h2 class="stencil">What it does not do</h2>
       </div>
-      <div class="sect-main">
-        <h2 class="head">What it does not do</h2>
-        <p style="margin-top:14px">It is a visualizer. It shows one configuration at a time and draws the consequence of it. It does not choose for you.</p>
-        <div class="hazard-rule" style="margin:26px 0 4px"></div>
-        <ul class="tick-list warn">
-          <li>It does not recommend a transport unit, a best fit or an optimal load.</li>
-          <li>It does not check securement, axle loads, weight distribution or legal limits.</li>
-          <li>Payload is measured against a single <strong>20,200 kg</strong> limit for every unit, so on a 20' container or a flatbed read the weight meter as an estimate.</li>
-          <li>Your setup and saved scenarios stay in your browser's local storage. They are not uploaded.</li>
-        </ul>
-        <p style="margin-top:30px"><a class="btn-solid" href="app.html">Open the simulator</a></p>
+      <div class="notice">
+        <div class="hazard-rule"></div>
+        <div class="notice-body">
+          <p>It is a visualizer. It shows one configuration at a time and draws the consequence of it. It does not choose for you.</p>
+          <ul class="tick-list">
+            <li>It does not recommend a transport unit, a best fit or an optimal load.</li>
+            <li>It does not check securement, axle loads, weight distribution or legal limits.</li>
+            <li>Payload is measured against a single 20,200 kg limit for every unit, so on a 20' container or a flatbed read the weight meter as an estimate.</li>
+            <li>Your setup and saved scenarios stay in your browser's local storage. They are not uploaded.</li>
+          </ul>
+        </div>
       </div>
     </div>
   </section>

@@ -1110,7 +1110,7 @@ function draw(n){
     ctx.setLineDash([]);ctx.lineWidth=1.5;
     ctx.beginPath();ctx.moveTo(ax-nx*tl,ay-ny*tl);ctx.lineTo(ax+nx*tl,ay+ny*tl);ctx.stroke();
     ctx.beginPath();ctx.moveTo(bx-nx*tl,by-ny*tl);ctx.lineTo(bx+nx*tl,by+ny*tl);ctx.stroke();
-    ctx.font="600 "+fs+"px 'IBM Plex Sans Condensed','Barlow Semi Condensed',-apple-system,sans-serif";
+    ctx.font="600 "+fs+"px 'Barlow Semi Condensed',-apple-system,sans-serif";
     var tw=ctx.measureText(label).width;
     var bw=tw+tpad*2+2,bh=fs+tpad*2;
     var mx=(ax+bx)/2,my=(ay+by)/2;
@@ -2895,7 +2895,7 @@ function ghostRegion(x0,x1,y0,y1,z0,z1,label){
   if(label){
     var c=pt((x0+x1)/2,(y0+y1)/2,(z0+z1)/2);
     var fs=Math.max(11,Math.round(12*S/0.9));
-    ctx.font='600 '+fs+'px "IBM Plex Sans Condensed","Barlow Semi Condensed",-apple-system,sans-serif';
+    ctx.font='600 '+fs+'px "Barlow Semi Condensed",-apple-system,sans-serif';
     var tw=ctx.measureText(label).width, pw=tw+14, ph=fs+9;
     ctx.fillStyle=dark?'rgba(19,32,44,0.9)':'rgba(243,245,246,0.94)';
     roundedRectPath(c.x-pw/2,c.y-ph/2,pw,ph,4); ctx.fill();
