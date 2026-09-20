@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en" data-type="a">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Type specimen — Testing Loading Simulator</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="Five candidate type systems applied to real slices of the site, for choosing between before committing one.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;600;700&family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@600;700&family=Instrument+Serif:ital@0;1&family=Martian+Mono:wght@500;600;700&family=Roboto+Mono:wght@500;600&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/base.css">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+/* ── The five candidate systems ───────────────────────────────────────────
+   Each overrides only the three font tokens. Everything below is the site's
+   real stylesheet, so what you see is what the pages would become.        */
+
+:root[data-type="a"] {
+  --f-cond: 'IBM Plex Sans Condensed', system-ui, sans-serif;
+  --f-body: 'IBM Plex Sans', system-ui, sans-serif;
+  --f-mono: 'IBM Plex Mono', ui-monospace, monospace;
+}
+:root[data-type="b"] {
+  --f-cond: 'Anton', 'Arial Narrow', system-ui, sans-serif;
+  --f-body: 'Archivo', system-ui, sans-serif;
+  --f-mono: 'Roboto Mono', ui-monospace, monospace;
+}
+:root[data-type="c"] {
+  --f-cond: 'Instrument Serif', Georgia, serif;
+  --f-body: 'Source Sans 3', system-ui, sans-serif;
+  --f-mono: 'IBM Plex Mono', ui-monospace, monospace;
+}
+:root[data-type="d"] {
+  --f-cond: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
+  --f-body: 'Barlow', system-ui, sans-serif;
+  --f-mono: 'DM Mono', ui-monospace, monospace;
+}
+:root[data-type="e"] {
+  --f-cond: 'Martian Mono', ui-monospace, monospace;
+  --f-body: 'IBM Plex Sans', system-ui, sans-serif;
+  --f-mono: 'Martian Mono', ui-monospace, monospace;
+}
+
+/* Anton and Instrument Serif are single-weight display faces; asking for 700
+   makes the browser synthesise a bolder version, which smears them. */
+:root[data-type="b"] .display, :root[data-type="b"] .head, :root[data-type="b"] .head-sm,
+:root[data-type="c"] .display, :root[data-type="c"] .head, :root[data-type="c"] .head-sm { font-weight: 400; }
+/* Instrument Serif is a text-case face; caps at 96px look like a headstone. */
+:root[data-type="c"] .display { text-transform: none; letter-spacing: -.02em; line-height: .95; }
+/* Martian Mono is very wide — it needs the display size pulled back. */
+:root[data-type="e"] h1.display { font-size: clamp(26px, 3.6vw, 46px); letter-spacing: -.02em; line-height: 1.05; }
+:root[data-type="e"] .head { font-size: clamp(18px, 1.9vw, 24px); }
+
+/* ── Specimen chrome, deliberately in a system face so it never moves ── */
+.sp-bar {
+  position: sticky; top: 0; z-index: 20; background: var(--panel);
+  border-bottom: 1px solid var(--rule-strong); padding: 12px 22px;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+.sp-bar-inner { max-width: 1280px; margin: 0 auto; display: flex; gap: 10px 8px; flex-wrap: wrap; align-items: center; }
+.sp-bar h1 { font: 700 13px system-ui; letter-spacing: .04em; text-transform: uppercase; margin-right: auto; color: var(--ink); }
+.sp-btn {
+  border: 1px solid var(--rule-strong); background: transparent; color: var(--ink-2);
+  padding: 7px 11px; border-radius: 2px; font: 600 12px system-ui; text-align: left; line-height: 1.3;
+}
+.sp-btn b { display: block; font-size: 12.5px; color: var(--ink); }
+.sp-btn small { display: block; font-size: 10.5px; color: var(--muted); font-weight: 500; margin-top: 2px; }
+.sp-btn:hover { border-color: var(--ink-2); }
+.sp-btn[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); }
+.sp-btn[aria-pressed="true"] b, .sp-btn[aria-pressed="true"] small { color: var(--panel); }
+.sp-note {
+  max-width: 1280px; margin: 0 auto; padding: 16px 22px 0;
+  font: 400 13.5px/1.6 system-ui; color: var(--ink-2);
+}
+.sp-note b { color: var(--ink); }
+.sp-faces { font-family: ui-monospace, monospace; font-size: 12px; color: var(--muted); margin-top: 6px; }
+.sp-divider { max-width: 1280px; margin: 0 auto; padding: 0 22px; }
+.sp-divider hr { border: 0; border-top: 1px solid var(--rule); margin: 40px 0 0; }
+.sp-h1row { padding: 16px 0 22px; border-bottom: 1px solid var(--rule); }
+.sp-h1row .tag { font: 600 11px system-ui; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 8px; }
+.sp-a .display { font-family: 'IBM Plex Sans Condensed', sans-serif; }
+.sp-b .display { font-family: 'Anton', sans-serif; font-weight: 400; }
+.sp-c .display { font-family: 'Instrument Serif', serif; font-weight: 400; text-transform: none; letter-spacing: -.02em; }
+.sp-d .display { font-family: 'Barlow Condensed', sans-serif; }
+.sp-e .display { font-family: 'Martian Mono', monospace; font-size: clamp(22px, 3vw, 38px) !important; letter-spacing: -.02em; line-height: 1.1; }
+.sp-h1row .display { font-size: clamp(30px, 5vw, 62px); }
+</style>
+</head>
+<body>
+
+<div class="sp-bar">
+  <div class="sp-bar-inner">
+    <h1>Type specimen</h1>
+    <button class="sp-btn" type="button" data-set="a" aria-pressed="true"><b>A · Engineering standard</b><small>IBM Plex — current</small></button>
+    <button class="sp-btn" type="button" data-set="b" aria-pressed="false"><b>B · Freight poster</b><small>Anton + Archivo</small></button>
+    <button class="sp-btn" type="button" data-set="c" aria-pressed="false"><b>C · Shipping line</b><small>Instrument Serif + Source Sans</small></button>
+    <button class="sp-btn" type="button" data-set="d" aria-pressed="false"><b>D · Highway signage</b><small>Barlow Condensed + Barlow</small></button>
+    <button class="sp-btn" type="button" data-set="e" aria-pressed="false"><b>E · Instrument panel</b><small>Martian Mono + Plex Sans</small></button>
+    <button class="sp-btn" type="button" id="spTheme" aria-pressed="false"><b>Dark</b><small>toggle</small></button>
+  </div>
+</div>
+
+<div class="sp-note">
+  <p id="spDesc"><b>A · Engineering standard.</b> IBM Plex, drawn for IBM as a corporate engineering face. Three coordinated widths from one family. Neutral, precise, at home in developer tooling — the safe, correct answer, and the one you have now.</p>
+  <p class="sp-faces" id="spFaces">display: IBM Plex Sans Condensed · text: IBM Plex Sans · data: IBM Plex Mono</p>
+</div>
+
+<main>
+
+  <!-- Real hero slice -->
+  <div class="hero-wrap">
+    <div class="shell">
+      <span class="label">Load visualizer · 9 transport units · in / ft³ / kg</span>
+      <h1 class="display hero-title">What fits, and what is left over</h1>
+      <div style="max-width:44ch;margin-top:26px">
+        <p class="lead" style="font-size:16px;line-height:1.6;color:var(--ink-2)">Enter your pallet and box dimensions. The simulator draws the load in 3D and reports the pallet positions used, how much of the usable volume is filled, and how much floor length, headroom and payload is still free.</p>
+        <div class="hero-actions">
+          <a class="btn-solid" href="#">Open the simulator</a>
+          <a class="btn-text" href="#">How many pallets fit?</a>
+        </div>
+        <div class="spec-block">
+          <span class="label">Running in the frame</span>
+          <dl>
+            <dt>Unit</dt><dd>Sea CTN 40' HC</dd>
+            <dt>Interior</dt><dd>473.6 × 92.6 × 106.3 in</dd>
+            <dt>Pallet</dt><dd>48 × 45 × 5 in</dd>
+            <dt>Box</dt><dd>45 × 24 × 18 in</dd>
+            <dt>Stacking</dt><dd>4 layers · 1 tier</dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Real stat band: the heaviest test, because these are the page's numbers -->
+  <div class="statband">
+    <div class="shell statband-inner">
+      <div class="stat-cell">
+        <span class="stat-num">6<span class="u">/ 18</span></span>
+        <p class="stat-cap">pallet positions used, of the <b>18</b> a 48 × 45 pallet allows on this floor</p>
+      </div>
+      <div class="stat-cell">
+        <span class="stat-num">329.6<span class="u">in</span></span>
+        <p class="stat-cap">of floor length still free beyond the last row, out of <b>473.6 in</b></p>
+      </div>
+      <div class="stat-cell">
+        <span class="stat-num">1,952<span class="u">ft³</span></span>
+        <p class="stat-cap">empty — <b>77%</b> of the 2,529 ft³ this container can actually use</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Real side-head section with the table -->
+  <section class="sect sect--tight">
+    <div class="shell sect-grid">
+      <div class="sect-aside">
+        <span class="label">Built-in equipment</span>
+        <p>Positions assume 48 × 45 in pallets with the 48 in side along the unit and no rotation.</p>
+        <div class="plate-row"><span class="plate">floor(W ÷ 45) × floor(L ÷ 48)</span></div>
+      </div>
+      <div class="sect-main">
+        <h2 class="head-sm" style="margin-bottom:18px">Interior dimensions</h2>
+        <div class="table-scroll">
+          <table class="units">
+            <thead>
+              <tr>
+                <th scope="col">Transport unit</th>
+                <th scope="col" class="num">Length <span class="th-unit">in</span></th>
+                <th scope="col" class="num">Width <span class="th-unit">in</span></th>
+                <th scope="col" class="num">Height <span class="th-unit">in</span></th>
+                <th scope="col" class="num">Usable <span class="th-unit">ft³</span></th>
+                <th scope="col" class="num">Positions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td class="u-name">Trailer 53'<span class="u-kind">Trailer</span></td><td class="num">630.0</td><td class="num">99.0</td><td class="num">110.0</td><td class="num">3,700</td><td class="num">26</td></tr>
+              <tr><td class="u-name">Sea CTN 20' STD<span class="u-kind">Sea container</span></td><td class="num">232.3</td><td class="num">92.6</td><td class="num">94.3</td><td class="num">1,100</td><td class="num">8</td></tr>
+              <tr><td class="u-name">Sea CTN 40' HC<span class="u-kind">Sea container</span></td><td class="num">473.6</td><td class="num">92.6</td><td class="num">106.3</td><td class="num">2,529</td><td class="num">18</td></tr>
+              <tr><td class="u-name">Flatbed 53'<span class="u-kind">Flatbed</span></td><td class="num">636.0</td><td class="num">102.0</td><td class="num">100.0</td><td class="num">3,500</td><td class="num">26</td></tr>
+              <tr><td class="u-name">Intermodal CNT 53'<span class="u-kind">Intermodal</span></td><td class="num">630.0</td><td class="num">98.0</td><td class="num">106.5</td><td class="num">3,550</td><td class="num">26</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Real section heading at full size -->
+  <section class="sect">
+    <div class="shell sect-grid">
+      <div class="sect-aside"><span class="label">The point of it</span></div>
+      <div class="sect-main">
+        <h2 class="head">A fill percentage will not tell you where the room is</h2>
+        <p>Open floor at the doors and a band of headroom over the whole load are both “23% full”, and they need opposite decisions. One takes another row; the other takes taller pallets, or nothing at all.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Real inverted band -->
+  <section class="sect sect--band band">
+    <div class="shell sect-grid">
+      <div class="sect-aside"><span class="label">Scope</span></div>
+      <div class="sect-main">
+        <h2 class="head">What it does not do</h2>
+        <p style="margin-top:14px">It is a visualizer. It shows one configuration at a time and draws the consequence of it. It does not choose for you.</p>
+        <div class="hazard-rule" style="margin:26px 0 4px"></div>
+        <ul class="tick-list warn">
+          <li>It does not recommend a transport unit, a best fit or an optimal load.</li>
+          <li>Payload is measured against a single <strong>20,200 kg</strong> limit for every unit.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- All five display faces at once, so they can be compared without switching -->
+  <section class="sect">
+    <div class="shell">
+      <h2 class="head-sm" style="margin-bottom:6px;font-family:system-ui">All five display faces, side by side</h2>
+      <p style="font:400 13.5px/1.6 system-ui;color:var(--ink-2);max-width:60ch;margin-bottom:26px">The headline is where the five differ most. Everything above changes with the buttons; this block shows all of them at once.</p>
+      <div class="sp-h1row sp-a"><span class="tag">A · IBM Plex Sans Condensed</span><div class="display">What fits, and what is left over</div></div>
+      <div class="sp-h1row sp-b"><span class="tag">B · Anton</span><div class="display">What fits, and what is left over</div></div>
+      <div class="sp-h1row sp-c"><span class="tag">C · Instrument Serif</span><div class="display">What fits, and what is left over</div></div>
+      <div class="sp-h1row sp-d"><span class="tag">D · Barlow Condensed</span><div class="display">What fits, and what is left over</div></div>
+      <div class="sp-h1row sp-e" style="border-bottom:0"><span class="tag">E · Martian Mono</span><div class="display">What fits, and what is left over</div></div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+(function(){
+  "use strict";
+  var DESC = {
+    a: ['<b>A · Engineering standard.</b> IBM Plex, drawn for IBM as a corporate engineering face. Three coordinated widths from one family. Neutral, precise, at home in developer tooling — the safe, correct answer, and the one you have now.',
+        'display: IBM Plex Sans Condensed · text: IBM Plex Sans · data: IBM Plex Mono'],
+    b: ['<b>B · Freight poster.</b> Anton is a heavy condensed grotesque built for headlines — the closest thing on Google Fonts to crate stencilling and dock signage. Loud and physical. It has one weight, so it can only ever be the headline; Archivo carries everything else.',
+        'display: Anton · text: Archivo · data: Roboto Mono'],
+    c: ['<b>C · Shipping line.</b> A high-contrast serif against a plain sans, the way a bill of lading or a freight forwarder\'s letterhead has always been set. Reads established rather than technical. The biggest departure from the current look, and the one that would date least.',
+        'display: Instrument Serif · text: Source Sans 3 · data: IBM Plex Mono'],
+    d: ['<b>D · Highway signage.</b> Barlow is drawn from Californian road and license-plate lettering — transport vernacular in the letterforms themselves. It is also what the simulator was originally designed in, so this is the least disruptive choice and the most native to the product.',
+        'display: Barlow Condensed · text: Barlow · data: DM Mono'],
+    e: ['<b>E · Instrument panel.</b> Mono leads: the headline, the labels and the figures are all the same machine face. The most distinctive of the five and the least like a marketing site. It is wide, so headlines have to be shorter and set smaller — the trade-off is real.',
+        'display: Martian Mono · text: IBM Plex Sans · data: Martian Mono']
+  };
+  var buttons = Array.prototype.slice.call(document.querySelectorAll('.sp-btn[data-set]'));
+  buttons.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var key = btn.getAttribute('data-set');
+      document.documentElement.setAttribute('data-type', key);
+      buttons.forEach(function(b){ b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'); });
+      document.getElementById('spDesc').innerHTML = DESC[key][0];
+      document.getElementById('spFaces').textContent = DESC[key][1];
+    });
+  });
+  var themeBtn = document.getElementById('spTheme');
+  themeBtn.addEventListener('click', function(){
+    var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.documentElement.setAttribute('data-theme', dark ? 'light' : 'dark');
+    themeBtn.setAttribute('aria-pressed', dark ? 'false' : 'true');
+    themeBtn.querySelector('b').textContent = dark ? 'Dark' : 'Light';
+  });
+  document.documentElement.setAttribute('data-theme', 'light');
+})();
+</script>
+
+</body>
+</html>
