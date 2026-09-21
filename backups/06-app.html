@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Load simulator — CargoLoadVision</title>
+<title>Load simulator — CargoLoadStudio</title>
 <meta name="description" content="Set pallet and box dimensions and see the load drawn in 3D: pallet positions, boxes per pallet, volume and weight fill, and the empty space that is left over.">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="CargoLoadVision">
-<meta property="og:title" content="Load simulator — CargoLoadVision">
+<meta property="og:site_name" content="CargoLoadStudio">
+<meta property="og:title" content="Load simulator — CargoLoadStudio">
 <meta property="og:description" content="Set pallet and box dimensions and see the load drawn in 3D, with the empty space that is left over.">
 <!-- TODO: add <link rel="canonical">, og:url and og:image once the Cloudflare Pages domain is fixed. -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -39,14 +39,13 @@
   <div class="site-strip-inner">
     <a class="wordmark" href="index.html">
       <svg viewBox="0 0 40 40" aria-hidden="true">
-        <rect x="3" y="10" width="34" height="21" rx="1.5" fill="none" stroke="currentColor" stroke-width="2.4"/>
-        <rect x="6.6" y="22.5" width="6.4" height="6.5" fill="currentColor"/>
-        <rect x="13.8" y="22.5" width="6.4" height="6.5" fill="currentColor" opacity=".6"/>
-        <rect x="6.6" y="15.2" width="6.4" height="6.5" fill="currentColor" opacity=".6"/>
-        <rect x="13.8" y="15.2" width="6.4" height="6.5" fill="currentColor" opacity=".35"/>
-        <path d="M22.8 12.6v15.8" stroke="var(--amber)" stroke-width="2.4" stroke-linecap="round"/>
+        <rect x="2.5" y="9.5" width="35" height="23" rx="1.5" fill="none" stroke="currentColor" stroke-width="2.2"/>
+        <rect x="7" y="22" width="9" height="7" fill="currentColor"/>
+        <rect x="17.5" y="22" width="9" height="7" fill="currentColor" opacity=".55"/>
+        <rect x="7" y="14" width="9" height="7" fill="currentColor" opacity=".55"/>
+        <path d="M31 14v15" stroke="var(--amber)" stroke-width="2.4"/>
       </svg>
-      <span>CargoLoadVision</span>
+      <span>CargoLoadStudio</span>
     </a>
     <nav class="site-nav" aria-label="Site">
       <a href="index.html">Overview</a>
@@ -59,15 +58,14 @@
 <header class="topbar">
   <div class="brand">
     <svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true">
-        <rect x="3" y="10" width="34" height="21" rx="1.5" fill="none" stroke="currentColor" stroke-width="2.4"/>
-        <rect x="6.6" y="22.5" width="6.4" height="6.5" fill="currentColor"/>
-        <rect x="13.8" y="22.5" width="6.4" height="6.5" fill="currentColor" opacity=".6"/>
-        <rect x="6.6" y="15.2" width="6.4" height="6.5" fill="currentColor" opacity=".6"/>
-        <rect x="13.8" y="15.2" width="6.4" height="6.5" fill="currentColor" opacity=".35"/>
-        <path d="M22.8 12.6v15.8" stroke="var(--amber)" stroke-width="2.4" stroke-linecap="round"/>
-      </svg>
+      <rect x="2.5" y="9.5" width="35" height="23" rx="1.5" fill="none" stroke="currentColor" stroke-width="2.2"/>
+      <rect x="7" y="22" width="9" height="7" fill="currentColor"/>
+      <rect x="17.5" y="22" width="9" height="7" fill="currentColor" opacity=".55"/>
+      <rect x="7" y="14" width="9" height="7" fill="currentColor" opacity=".55"/>
+      <path d="M31 14v15" stroke="var(--amber)" stroke-width="2.4"/>
+    </svg>
     <div class="brand-title">
-      <h1>CargoLoadVision</h1>
+      <h1>CargoLoadStudio</h1>
       <p class="brand-sub">Pallet and box load planning for trailers, sea containers and flatbeds</p>
     </div>
   </div>
@@ -385,6 +383,8 @@
 
 <div class="site-foot-wrap">
 <footer class="site-footer">
+  <span class="footer-version">Version 2.0</span>
+  <p class="footer-disclaimer">For internal planning and visualization purposes only. Validate final loading plans against applicable safety, weight, securement, and site requirements. Saved settings are stored locally in the user’s browser and are not shared automatically with the HTML file.</p>
   <span class="footer-credit">Created by Spratus</span>
   <div class="footer-links">
     <a href="index.html">Overview</a>
@@ -408,7 +408,6 @@
     <button class="close-btn" type="button" data-close aria-label="Close">×</button>
   </div>
   <div class="sheet-body">
-    <p class="scenario-warning"><strong>Saved scenarios live in this browser only.</strong> They survive closing the tab, but they are lost if you clear site data, browse privately, or move to another browser or computer &mdash; and there is no account to restore them from. Copy the share code below and keep it somewhere safe.</p>
     <div class="sheet-section">
       <h3>Save the current setup</h3>
       <form class="inline-form" id="scenarioForm">

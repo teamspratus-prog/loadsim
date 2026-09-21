@@ -22,8 +22,8 @@ var ZOOM_BASE=1.12;
 var ZOOM=ZOOM_BASE;
 var VIEW_STYLE="schematic";
 var VIEW_ORIENTATION="isometric";
-var STORAGE_KEY = "clStateV1";
-var THEME_KEY = "clThemeV1";
+var STORAGE_KEY = "clsStateV1";
+var THEME_KEY = "clsThemeV1";
 var CONTAINER_INPUT_IDS = ['cL','cW','cH','cVt','cVu'];
 var DIMENSION_INPUT_IDS = ['dPL','dPW','dPH','dBL','dBW','dBH','dBS','dPT','dQTY','dPartWeight'];
 var isLoadingSavedState = false;
@@ -724,14 +724,6 @@ function drawTrailerAestheticDetails(){
   var wheelZ=-32;
   var wheelR=18;
 
-  if(VIEW_ORIENTATION==='top'){
-    // Nothing: the body occludes the running gear from directly above.
-  } else if(VIEW_ORIENTATION==='front' || VIEW_ORIENTATION==='rear'){
-    // Looking along the trailer length the tandem axles sit one behind the
-    // other, so the cross-trailer geometry is drawn once and both tires and
-    // the axle between them are visible.
-    drawFlatbedEndOnRunningGear(VIEW_ORIENTATION==='front'?axleXs[0]:axleXs[1],wheelZ,wheelR,axleOuter,axleInner,axleHighlight);
-  } else {
   // Suspension links and short visible axle sections behind each wheel.
   ln(pt(axleXs[0],wheelY-3,wheelZ+7),pt(axleXs[1],wheelY-3,wheelZ+7),support,Math.max(1.1,1.35*S));
   axleXs.forEach(function(ax){
@@ -763,7 +755,6 @@ function drawTrailerAestheticDetails(){
 
   // Wheels themselves.
   axleXs.forEach(function(ax){ drawProjectedWheel(ax,wheelY,wheelZ,wheelR); });
-  }
 
   // Re-draw the visible long rail in the foreground so the wheels tuck under the trailer body.
   face([pt(0,W,frameBottom),pt(L,W,frameBottom),pt(L,W,frameTop),pt(0,W,frameTop)],railFill,railEdge,.9*S);
@@ -2709,8 +2700,8 @@ window.addEventListener('resize',function(){
 
 
 // ── Workbench extensions ────────────────────────────────────────────────────
-var SCENARIO_KEY = "clScenariosV1";
-var EMPTY_KEY = "clShowEmptyV1";
+var SCENARIO_KEY = "clsScenariosV1";
+var EMPTY_KEY = "clsShowEmptyV1";
 var lastDeletedScenario = null;
 var toastTimer = null;
 var LAST_M = null;
@@ -3088,7 +3079,7 @@ if('IntersectionObserver' in window){
 // Copy results for Excel (tab-separated)
 byId('copyExcel').addEventListener('click',function(){
   var lines=[], clean=function(t){ return String(t||'').replace(/\s+/g,' ').trim(); };
-  lines.push(['CargoLoadVision', new Date().toLocaleString()].join('\t'));
+  lines.push(['CargoLoadStudio', new Date().toLocaleString()].join('\t'));
   lines.push(['Transport unit', C.name, C.L+' x '+C.W+' x '+C.H+' in', C.Vu+' ft3 usable'].join('\t'));
   lines.push(['Mode', isMultiMode()?'Multiple parts':'Single part'].join('\t'));
   lines.push(['Volume fill', clean(byId('statFill').textContent)].join('\t'));
@@ -3166,7 +3157,7 @@ function applyStateObject(state){
   return ok;
 }
 function makeShareCode(){
-  var payload={app:'cargoload',v:1,current:collectState(),scenarios:getScenarios()};
+  var payload={app:'cargoloadstudio',v:1,current:collectState(),scenarios:getScenarios()};
   try { return btoa(unescape(encodeURIComponent(JSON.stringify(payload)))); }
   catch(e){ return ''; }
 }
@@ -3188,7 +3179,7 @@ byId('scenarioForm').addEventListener('submit',function(e){
   setScenarios(list);
   byId('scenarioName').value='';
   renderScenarios(); refreshShareCode();
-  showToast('Saved “'+name+'”. Copy the share code below to keep it.');
+  showToast('Saved “'+name+'”');
 });
 
 byId('scenarioList').addEventListener('click',function(e){
@@ -3236,7 +3227,7 @@ byId('importShareCode').addEventListener('click',function(){
   if(!raw){ msg.textContent='Paste a share code first.'; msg.classList.add('err'); return; }
   var data=null;
   try { data=JSON.parse(decodeURIComponent(escape(atob(raw.replace(/\s+/g,''))))); } catch(e){}
-  if(!data || data.app!=='cargoload'){
+  if(!data || data.app!=='cargoloadstudio'){
     msg.textContent='This code could not be read. Copy the full code again and paste it here.'; msg.classList.add('err'); return;
   }
   var list=getScenarios(), ids={}, added=0;

@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CargoLoadVision — see what fits in a trailer, container or flatbed</title>
+<title>CargoLoadStudio — see what fits in a trailer, container or flatbed</title>
 <meta name="description" content="Enter pallet and box dimensions and see the load drawn in 3D: pallet positions, volume and weight fill, and the floor length, headroom and payload left over in a 48' or 53' trailer, a 20'–45' sea container, a flatbed or a 53' intermodal container.">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="CargoLoadVision">
-<meta property="og:title" content="CargoLoadVision — see what fits in a trailer, container or flatbed">
+<meta property="og:site_name" content="CargoLoadStudio">
+<meta property="og:title" content="CargoLoadStudio — see what fits in a trailer, container or flatbed">
 <meta property="og:description" content="Enter pallet and box dimensions and see the load drawn in 3D, with the pallet positions used and the empty space left over.">
 <!-- TODO: add <link rel="canonical">, og:url and og:image once the deployed domain is fixed. -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -24,14 +24,13 @@
   <div class="site-strip-inner">
     <a class="wordmark" href="index.html">
       <svg viewBox="0 0 40 40" aria-hidden="true">
-        <rect x="3" y="10" width="34" height="21" rx="1.5" fill="none" stroke="currentColor" stroke-width="2.4"/>
-        <rect x="6.6" y="22.5" width="6.4" height="6.5" fill="currentColor"/>
-        <rect x="13.8" y="22.5" width="6.4" height="6.5" fill="currentColor" opacity=".6"/>
-        <rect x="6.6" y="15.2" width="6.4" height="6.5" fill="currentColor" opacity=".6"/>
-        <rect x="13.8" y="15.2" width="6.4" height="6.5" fill="currentColor" opacity=".35"/>
-        <path d="M22.8 12.6v15.8" stroke="var(--amber)" stroke-width="2.4" stroke-linecap="round"/>
+        <rect x="2.5" y="9.5" width="35" height="23" rx="1.5" fill="none" stroke="currentColor" stroke-width="2.2"/>
+        <rect x="7" y="22" width="9" height="7" fill="currentColor"/>
+        <rect x="17.5" y="22" width="9" height="7" fill="currentColor" opacity=".55"/>
+        <rect x="7" y="14" width="9" height="7" fill="currentColor" opacity=".55"/>
+        <path d="M31 14v15" stroke="var(--amber)" stroke-width="2.4"/>
       </svg>
-      <span>CargoLoadVision</span>
+      <span>CargoLoadStudio</span>
     </a>
     <nav class="site-nav" aria-label="Site">
       <a href="index.html" aria-current="page">Overview</a>
@@ -75,7 +74,7 @@
             <b>Live — no sign-up</b>
             <span>Pick a unit, then drag the pallet slider</span>
           </div>
-          <iframe src="app.html?embed=1" title="CargoLoadVision, 3D load view"></iframe>
+          <iframe src="app.html?embed=1" title="CargoLoadStudio, 3D load view"></iframe>
           <p class="demo-note">The 3D view responds to touch, which would fight with scrolling here. <a class="btn-text" href="app.html">Open the full simulator</a> to use it on this screen.</p>
         </div>
       </div>
@@ -539,6 +538,8 @@
 
 <div class="site-foot-wrap">
 <footer class="site-footer">
+  <span class="footer-version">Version 2.0</span>
+  <p class="footer-disclaimer">For internal planning and visualization purposes only. Validate final loading plans against applicable safety, weight, securement, and site requirements. Saved settings are stored locally in the user’s browser and are not shared automatically with the HTML file.</p>
   <span class="footer-credit">Created by Spratus</span>
   <div class="footer-links">
     <a href="index.html">Overview</a>
