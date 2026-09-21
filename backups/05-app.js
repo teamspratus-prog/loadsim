@@ -22,8 +22,8 @@ var ZOOM_BASE=1.12;
 var ZOOM=ZOOM_BASE;
 var VIEW_STYLE="schematic";
 var VIEW_ORIENTATION="isometric";
-var STORAGE_KEY = "clsStateV1";
-var THEME_KEY = "clsThemeV1";
+var STORAGE_KEY = "gmlsContainerLoadingSimulatorStateV1";
+var THEME_KEY = "containerTheme";
 var CONTAINER_INPUT_IDS = ['cL','cW','cH','cVt','cVu'];
 var DIMENSION_INPUT_IDS = ['dPL','dPW','dPH','dBL','dBW','dBH','dBS','dPT','dQTY','dPartWeight'];
 var isLoadingSavedState = false;
@@ -2700,8 +2700,8 @@ window.addEventListener('resize',function(){
 
 
 // ── Workbench extensions ────────────────────────────────────────────────────
-var SCENARIO_KEY = "clsScenariosV1";
-var EMPTY_KEY = "clsShowEmptyV1";
+var SCENARIO_KEY = "tlsScenariosV1";
+var EMPTY_KEY = "tlsShowEmptyV1";
 var lastDeletedScenario = null;
 var toastTimer = null;
 var LAST_M = null;
@@ -3079,7 +3079,7 @@ if('IntersectionObserver' in window){
 // Copy results for Excel (tab-separated)
 byId('copyExcel').addEventListener('click',function(){
   var lines=[], clean=function(t){ return String(t||'').replace(/\s+/g,' ').trim(); };
-  lines.push(['CargoLoadStudio', new Date().toLocaleString()].join('\t'));
+  lines.push(['Testing Loading Simulator', new Date().toLocaleString()].join('\t'));
   lines.push(['Transport unit', C.name, C.L+' x '+C.W+' x '+C.H+' in', C.Vu+' ft3 usable'].join('\t'));
   lines.push(['Mode', isMultiMode()?'Multiple parts':'Single part'].join('\t'));
   lines.push(['Volume fill', clean(byId('statFill').textContent)].join('\t'));
@@ -3157,7 +3157,7 @@ function applyStateObject(state){
   return ok;
 }
 function makeShareCode(){
-  var payload={app:'cargoloadstudio',v:1,current:collectState(),scenarios:getScenarios()};
+  var payload={app:'testing-loading-simulator',v:1,current:collectState(),scenarios:getScenarios()};
   try { return btoa(unescape(encodeURIComponent(JSON.stringify(payload)))); }
   catch(e){ return ''; }
 }
@@ -3227,7 +3227,7 @@ byId('importShareCode').addEventListener('click',function(){
   if(!raw){ msg.textContent='Paste a share code first.'; msg.classList.add('err'); return; }
   var data=null;
   try { data=JSON.parse(decodeURIComponent(escape(atob(raw.replace(/\s+/g,''))))); } catch(e){}
-  if(!data || data.app!=='cargoloadstudio'){
+  if(!data || data.app!=='testing-loading-simulator'){
     msg.textContent='This code could not be read. Copy the full code again and paste it here.'; msg.classList.add('err'); return;
   }
   var list=getScenarios(), ids={}, added=0;

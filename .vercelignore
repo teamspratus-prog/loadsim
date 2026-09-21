@@ -1,0 +1,5 @@
+# Internal working files — kept in git, not served.
+backups/
+type-specimen.html
+Testing_Loading_Simulator.html
+assets/diagrams.gen.js

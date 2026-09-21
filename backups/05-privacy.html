@@ -6,7 +6,7 @@
 <title>Privacy — what this site stores</title>
 <meta name="description" content="The simulator runs entirely in your browser. No account, no cookies, no analytics. This page lists the four localStorage keys it writes and the one external request it makes.">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="CargoLoadStudio">
+<meta property="og:site_name" content="Testing Loading Simulator">
 <meta property="og:title" content="Privacy — what this site stores">
 <meta property="og:description" content="No account, no cookies, no analytics. The four browser storage keys and the one external request, named.">
 <!-- TODO: add <link rel="canonical">, og:url and og:image once the deployed domain is fixed. -->
@@ -30,7 +30,7 @@
         <rect x="7" y="14" width="9" height="7" fill="currentColor" opacity=".55"/>
         <path d="M31 14v15" stroke="var(--amber)" stroke-width="2.4"/>
       </svg>
-      <span>CargoLoadStudio</span>
+      <span>Testing Loading Simulator</span>
     </a>
     <nav class="site-nav" aria-label="Site">
       <a href="index.html">Overview</a>
@@ -79,19 +79,19 @@
         <p>The simulator writes these to your browser's <b>localStorage</b> so your setup survives a reload. They stay on the device that wrote them and are readable only by this site.</p>
 <div style="max-width:76ch">
         <div class="kv-row">
-          <code>clsStateV1</code>
+          <code>gmlsContainerLoadingSimulatorStateV1</code>
           <p>The current setup: transport unit and its interior dimensions, pallet and box dimensions, layers, tiers, parts per box, part weight, which panels are open, the zoom level and the view angle.</p>
         </div>
         <div class="kv-row">
-          <code>clsScenariosV1</code>
+          <code>tlsScenariosV1</code>
           <p>Scenarios you have saved by name, each holding a full copy of the setup above plus the date you saved it.</p>
         </div>
         <div class="kv-row">
-          <code>clsShowEmptyV1</code>
+          <code>tlsShowEmptyV1</code>
           <p>Whether the empty-space overlay is switched on. A single character.</p>
         </div>
         <div class="kv-row">
-          <code>clsThemeV1</code>
+          <code>containerTheme</code>
           <p>Your light or dark choice, shared across every page on the site.</p>
         </div>
       </div>

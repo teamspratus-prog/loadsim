@@ -3,7 +3,7 @@
    Loaded in <head> without defer so the theme is applied before first paint. */
 (function(){
   "use strict";
-  var KEY = "clsThemeV1";
+  var KEY = "containerTheme";
 
   function get(key){ try { return localStorage.getItem(key); } catch(e) { return null; } }
   function set(key,value){ try { localStorage.setItem(key,value); } catch(e) {} }
