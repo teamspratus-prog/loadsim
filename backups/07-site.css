@@ -31,7 +31,6 @@
   --band-ink: #E8EDF1;
   --band-muted: rgba(232,237,241,.82);
   --band-rule: rgba(255,255,255,.17);
-  --logo-top: #0F8B96; --logo-side: #0A6B74; --logo-end: #07505A;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -47,7 +46,6 @@
     --band-ink: #E1E8EE;
     --band-muted: rgba(225,232,238,.78);
     --band-rule: rgba(255,255,255,.13);
-    --logo-top: #3FBFC7; --logo-side: #2E98A0; --logo-end: #1F7079;
   }
 }
 :root[data-theme="dark"] {
@@ -63,7 +61,6 @@
   --band-ink: #E1E8EE;
   --band-muted: rgba(225,232,238,.78);
   --band-rule: rgba(255,255,255,.13);
-  --logo-top: #3FBFC7; --logo-side: #2E98A0; --logo-end: #1F7079;
 }
 
 .shell { max-width: 1280px; margin: 0 auto; padding: 0 22px; }
@@ -111,22 +108,8 @@ h1.display { font-size: clamp(42px, 7.4vw, 96px); }
   display: flex; align-items: center; gap: 12px 22px; flex-wrap: wrap;
 }
 .wordmark { display: inline-flex; align-items: center; gap: 9px; text-decoration: none; color: var(--ink); margin-right: auto; min-width: 0; }
-/* Mark from "Concept 2 — Isometric load": a container wireframe, the loaded
-   part of it, and an amber dashed line where the load stops. Not square, so
-   height is left to follow the viewBox. */
-.logo { height: auto; color: var(--ink); flex: 0 0 auto; }
-.wordmark .logo { width: 30px; }
-.brand-mark.logo { width: 40px; height: auto; }
-/* The concept's own rule: under 24px the dashes turn to mush, so they drop
-   out and the outline carries the shape on its own. */
-.logo-min .logo, .logo.logo-min { width: 20px; }
-.logo-min .logo .logo-empty, .logo.logo-min .logo-empty { display: none; }
-.logo-min .logo .logo-shell, .logo.logo-min .logo-shell { stroke-width: 11; }
-.wordmark .wm {
-  font-family: var(--f-cond); font-weight: 700; font-size: 17px;
-  letter-spacing: -.005em; white-space: nowrap; color: var(--ink);
-}
-.wordmark .wm b, .brand-title h1 b { color: var(--accent); font-weight: inherit; }
+.wordmark svg { width: 24px; height: 24px; flex: 0 0 auto; }
+.wordmark span { font: 600 13px var(--f-mono); text-transform: uppercase; letter-spacing: .1em; white-space: nowrap; }
 .site-nav { display: flex; align-items: center; gap: 2px; flex-wrap: wrap; }
 .site-nav a, .strip-btn {
   font: 500 11.5px var(--f-mono); text-transform: uppercase; letter-spacing: .1em;
