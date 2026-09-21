@@ -33,7 +33,7 @@ function ghost(P, x0,x1,y0,y1,z0,z1){
   ].join('\n    ');
 }
 function tag(x,y,text,anchor){
-  const w = text.length*7.5 + 16, h = 22;
+  const w = text.length*6.6 + 16, h = 22;
   const tx = anchor==='middle' ? x : (anchor==='end' ? x-w/2 : x+w/2);
   return `<g><rect x="${r(tx-w/2)}" y="${r(y-h/2)}" width="${r(w)}" height="${h}" rx="2" fill="var(--dg-tagbg)" stroke="var(--accent)" stroke-width="1"/>`
     + `<text x="${r(tx)}" y="${r(y)}" text-anchor="middle" dominant-baseline="central" font-size="12" font-weight="600" fill="var(--dg-tagink)">${text}</text></g>`;

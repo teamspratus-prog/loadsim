@@ -7,9 +7,9 @@
    1. Section labels hang in a narrow left margin under a 2px rule, the way a
       technical manual sets side-heads. Content runs wide beside them. Not
       every section takes the margin — some open cold, which is the point.
-   2. Every measured figure uses tabular figures so columns line up, and the
-      condensed face carries labels and large numbers. A monospace is kept
-      only for content that genuinely is code.
+   2. Every measured figure is set in IBM Plex Mono. The subject is
+      measurement, so the numbers carry the technical voice; borders do not
+      have to.
    3. Density varies deliberately. --tight for data, --open for drawings,
       --band for the one inverted section.
 
@@ -85,18 +85,16 @@ h1.display { font-size: clamp(42px, 7.4vw, 96px); }
 }
 .head-sm { font-family: var(--f-cond); font-weight: 600; font-size: 20px; line-height: 1.1; letter-spacing: -.008em; }
 
-/* Labels are condensed caps. Mono was reading as developer tooling rather
-   than freight paperwork, and it is not needed to align figures: the text
-   faces carry tabular digits. */
+/* Labels are mono, because everything else that is mono on this site is data. */
 .label {
-  display: block; font: 600 11.5px var(--f-cond);
-  text-transform: uppercase; letter-spacing: .15em; color: var(--muted);
+  display: block; font: 600 11px var(--f-mono);
+  text-transform: uppercase; letter-spacing: .13em; color: var(--muted);
 }
 
 /* ── Data plate: the stencilled information panel on a container door ── */
 .plate {
   display: inline-block; padding: 5px 9px; border: 1px solid var(--rule-strong);
-  font: 600 12px/1.3 var(--f-cond); text-transform: uppercase; letter-spacing: .07em;
+  font: 500 11.5px/1.3 var(--f-mono); text-transform: uppercase; letter-spacing: .06em;
   color: var(--ink-2); background: transparent; font-variant-numeric: tabular-nums;
 }
 .plate strong { color: var(--ink); font-weight: 600; }
@@ -131,7 +129,7 @@ h1.display { font-size: clamp(42px, 7.4vw, 96px); }
 .wordmark .wm b, .brand-title h1 b { color: var(--accent); font-weight: inherit; }
 .site-nav { display: flex; align-items: center; gap: 2px; flex-wrap: wrap; }
 .site-nav a, .strip-btn {
-  font: 600 12.5px var(--f-cond); text-transform: uppercase; letter-spacing: .12em;
+  font: 500 11.5px var(--f-mono); text-transform: uppercase; letter-spacing: .1em;
   color: var(--muted); text-decoration: none; padding: 7px 9px;
   border: 0; background: transparent; border-bottom: 2px solid transparent;
 }
@@ -180,13 +178,13 @@ h1.display { font-size: clamp(42px, 7.4vw, 96px); }
 .spec-block { margin-top: 28px; border-top: 1px solid var(--rule); }
 .spec-block .label { margin: 14px 0 10px; }
 .spec-block dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 18px; }
-.spec-block dt { font: 600 11.5px var(--f-cond); text-transform: uppercase; letter-spacing: .11em; color: var(--muted); }
-.spec-block dd { font: 500 13.5px var(--f-body); color: var(--ink); font-variant-numeric: tabular-nums; }
+.spec-block dt { font: 500 11px var(--f-mono); text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+.spec-block dd { font: 500 13px var(--f-mono); color: var(--ink); font-variant-numeric: tabular-nums; }
 
 .btn-solid {
   display: inline-flex; align-items: center; height: 44px; padding: 0 20px;
   border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink);
-  font: 700 13.5px var(--f-cond); text-transform: uppercase; letter-spacing: .11em;
+  font: 600 12px var(--f-mono); text-transform: uppercase; letter-spacing: .1em;
   text-decoration: none; border-radius: 2px;
 }
 .btn-solid:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
@@ -203,7 +201,7 @@ h1.display { font-size: clamp(42px, 7.4vw, 96px); }
   .stat-cell + .stat-cell { border-top: 0; border-left: 1px solid var(--rule); padding-left: 36px; padding-top: 30px; }
 }
 .stat-num {
-  display: block; font-family: var(--f-cond); font-weight: 700;
+  display: block; font-family: var(--f-mono); font-weight: 600;
   font-size: clamp(42px, 5.4vw, 74px); line-height: .9; letter-spacing: -.035em;
   font-variant-numeric: tabular-nums; color: var(--ink);
 }
@@ -214,7 +212,7 @@ h1.display { font-size: clamp(42px, 7.4vw, 96px); }
 /* ── Live tool frame ── */
 .demo { border: 1px solid var(--rule-strong); background: var(--bay); min-width: 0; }
 .demo-bar { display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; padding: 8px 12px; background: var(--ink); color: var(--panel); }
-.demo-bar b { font: 700 12px var(--f-cond); text-transform: uppercase; letter-spacing: .13em; }
+.demo-bar b { font: 600 11px var(--f-mono); text-transform: uppercase; letter-spacing: .12em; }
 .demo-bar span { font-size: 12px; opacity: .74; margin-left: auto; }
 /* Tall enough that the isometric view is not cropped: the simulator fits the
    isometric projection to width only, so a short frame clips the container. */
@@ -230,7 +228,7 @@ h1.display { font-size: clamp(42px, 7.4vw, 96px); }
 /* ── Figures ── */
 .fig { margin: 0; }
 .fig .dg { display: block; width: 100%; max-width: 980px; height: auto; color: var(--ink); }
-.fig .dg text { font-family: var(--f-cond); font-weight: 600; }
+.fig .dg text { font-family: var(--f-mono); }
 .fig .dg text.lbl { font-family: var(--f-cond); }
 /* One drawing runs past the container, clipped by the section. Only where
    there is margin to bleed into — on a phone it just overflows. */
@@ -246,7 +244,7 @@ h1.display { font-size: clamp(42px, 7.4vw, 96px); }
 @media (min-width: 800px) { .specs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .spec { display: grid; grid-template-columns: 1fr auto; gap: 3px 16px; align-items: baseline; padding: 11px 0; border-bottom: 1px solid var(--rule); }
 .spec dt { font-size: 14px; font-weight: 600; }
-.spec .unit { font: 600 11.5px var(--f-cond); text-transform: uppercase; letter-spacing: .09em; color: var(--muted); text-align: right; white-space: nowrap; }
+.spec .unit { font: 500 11px var(--f-mono); text-transform: uppercase; letter-spacing: .07em; color: var(--muted); text-align: right; white-space: nowrap; }
 .spec .desc { grid-column: 1 / -1; font-size: 13px; line-height: 1.5; color: var(--ink-2); max-width: 52ch; }
 
 /* ── Tables ── */
@@ -254,16 +252,16 @@ h1.display { font-size: clamp(42px, 7.4vw, 96px); }
 .units { width: 100%; border-collapse: collapse; font-size: 13.5px; }
 .units th {
   text-align: left; padding: 0 18px 9px 0; border-bottom: 2px solid var(--ink);
-  font: 600 11.5px var(--f-cond); text-transform: uppercase; letter-spacing: .11em; color: var(--muted); white-space: nowrap;
+  font: 500 10.5px var(--f-mono); text-transform: uppercase; letter-spacing: .1em; color: var(--muted); white-space: nowrap;
 }
 .units th .th-unit { color: var(--rule-strong); }
 .units td { padding: 9px 18px 9px 0; border-bottom: 1px solid var(--rule); white-space: nowrap; }
 .units tbody tr:hover td { background: var(--panel-2); }
-.units .num { text-align: right; font-weight: 500; font-variant-numeric: tabular-nums; }
+.units .num { text-align: right; font-family: var(--f-mono); font-weight: 500; font-variant-numeric: tabular-nums; }
 .units .u-name { font-weight: 600; }
-.units .u-kind { display: block; font: 600 11px var(--f-cond); text-transform: uppercase; letter-spacing: .09em; color: var(--muted); }
+.units .u-kind { display: block; font: 500 10.5px var(--f-mono); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
 .table-foot { font-size: 12.5px; line-height: 1.6; color: var(--muted); margin-top: 14px; max-width: 74ch; }
-.table-foot b { color: var(--ink-2); font-family: var(--f-code); font-weight: 500; }
+.table-foot b { color: var(--ink-2); font-family: var(--f-mono); font-weight: 500; }
 .matrix th:first-child, .matrix td:first-child { position: sticky; left: 0; background: var(--page); }
 .matrix tbody tr:hover td:first-child { background: var(--panel-2); }
 
@@ -303,7 +301,7 @@ h1.display { font-size: clamp(42px, 7.4vw, 96px); }
 .site-foot-wrap .site-footer { max-width: 1280px; }
 .footer-links { display: flex; gap: 16px; flex-wrap: wrap; }
 .footer-links a {
-  font: 600 11.5px var(--f-cond); text-transform: uppercase; letter-spacing: .11em;
+  font: 500 11px var(--f-mono); text-transform: uppercase; letter-spacing: .1em;
   color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--rule-strong);
 }
 .footer-links a:hover { color: var(--accent); border-bottom-color: var(--accent); }
@@ -324,7 +322,7 @@ h1.display { font-size: clamp(42px, 7.4vw, 96px); }
 .formula {
   display: block; margin: 20px 0; padding: 15px 17px; overflow-x: auto; white-space: pre-wrap;
   background: var(--panel-2); border-left: 2px solid var(--accent);
-  font: 500 13px/1.6 var(--f-code); color: var(--ink); font-variant-numeric: tabular-nums;
+  font: 500 13.5px/1.6 var(--f-mono); color: var(--ink); font-variant-numeric: tabular-nums;
 }
 
 /* Numbered because the calculation genuinely is a sequence. */
@@ -334,13 +332,13 @@ h1.display { font-size: clamp(42px, 7.4vw, 96px); }
   counter-increment: step; content: counter(step);
   position: absolute; left: 0; top: 13px; width: 24px; height: 20px;
   display: flex; align-items: center; justify-content: center;
-  border: 1px solid var(--rule-strong); font: 600 11.5px var(--f-cond); color: var(--ink-2);
+  border: 1px solid var(--rule-strong); font: 500 11px var(--f-mono); color: var(--ink-2);
 }
-.steps li strong { font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
+.steps li strong { font-family: var(--f-mono); font-weight: 600; color: var(--ink); }
 
 .kv-row { display: grid; grid-template-columns: minmax(190px, 17rem) 1fr; gap: 5px 24px; padding: 13px 0; border-bottom: 1px solid var(--rule); }
 @media (max-width: 640px) { .kv-row { grid-template-columns: 1fr; } }
-.kv-row code { font: 500 12.5px var(--f-code); color: var(--ink); word-break: break-all; }
+.kv-row code { font: 500 12.5px var(--f-mono); color: var(--ink); word-break: break-all; }
 .kv-row p { font-size: 13.5px; line-height: 1.55; color: var(--ink-2); margin: 0; }
 
 /* Unmistakably a placeholder, not a plan someone forgot to fill in. */

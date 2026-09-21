@@ -12,10 +12,7 @@
   --shadow-float: 0 4px 16px rgba(10,24,38,.12);
   --f-cond: 'IBM Plex Sans Condensed', 'Barlow Semi Condensed', 'Arial Narrow', system-ui, sans-serif;
   --f-body: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  /* Only for content that genuinely is code: the pallet formula and the
-     storage-key names. Everything else that used to be mono now uses the
-     condensed face for labels and tabular figures for numbers. */
-  --f-code: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  --f-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Consolas, monospace;
   --focus: 0 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent);
   color-scheme: light;
 }
