@@ -2368,8 +2368,8 @@ function updateMultiResults(M,total,visible){
   visible.forEach(function(selected){selected.place.pattern.pallets.slice(0,selected.count).forEach(function(p){palletVol+=p.palletVolume;});});
   var used=(boxVol+palletVol)/1728,fill=C.Vu>0?Math.round(used/C.Vu*100):0;
   byId('statRows').textContent=countPlacementRows(visible.map(function(v){return v.place;}));
-  byId('statTotalPallets').textContent=total+' / '+M.totalPallets;byId('statTotalPalletsNote').textContent='loaded / laid out';
-  byId('statPal').textContent=total+' / '+M.totalPallets;byId('statPalNote').textContent='occupied / laid out';
+  byId('statTotalPallets').textContent=total+' / '+M.totalPallets;byId('statTotalPalletsNote').textContent='loaded / optimized maximum';
+  byId('statPal').textContent=total+' / '+M.totalPallets;byId('statPalNote').textContent='occupied / available plan';
   byId('statBpp').textContent=total?Math.round(totalBoxes/total):0;byId('statBppNote').textContent='average boxes / pallet';
   byId('statBoxes').textContent=totalBoxes;
   var partLines=M.parts.map(function(p){return safeText(p.name)+': '+(totals.parts[p.index]||0);});
@@ -2381,13 +2381,13 @@ function updateMultiResults(M,total,visible){
   byId('statWeightNote').textContent=completeWeightData?'parts only':(knownWeightKg>0?'partial · missing '+missingWeightNames.join(', '):'part weights not set');
   byId('statWeightFill').textContent=completeWeightData?weightFillPercent(totalWeightKg)+'%':'\u2014';
   byId('statWeightFillNote').textContent=completeWeightData?'20,200 kg max':(missingWeightNames.length?'enter all loaded part weights':'20,200 kg max');
-  var pi=byId('packingInfo');pi.style.display='block';pi.textContent='Exact quantities · one part type per pallet · arranged to fit';
+  var pi=byId('packingInfo');pi.style.display='block';pi.textContent='Exact quantities · fill-rate optimized · one part type per pallet';
   var summary=M.parts.map(function(p){
     var requested=p.basis==='parts'?Math.ceil(p.target):Math.ceil(p.target)*p.partsPerBox;
     return '<strong>'+safeText(p.name)+':</strong> '+(totals.parts[p.index]||0)+' / '+requested+' parts · '+(totals.boxes[p.index]||0)+' boxes · '+(totals.pallets[p.index]||0)+' pallet'+((totals.pallets[p.index]||0)===1?'':'s')+' · '+safeText(p.pallet.label)+(p.partWeight>0?' · '+p.partWeight+' '+p.weightUnit+'/part':'')+(p.maxLayersLimit>0?' · max '+p.maxLayers+' layers':'')+' · '+(p.noPalletStack?'not stackable':'stackable');
   }).join('<br>');
   byId('multiPlanSummary').innerHTML=summary||'No valid box and pallet configuration fits in the selected transport.';
-  byId('constraintGrid').innerHTML='<div class="constraint-item"><span>Demand mode</span><strong>Exact quantities</strong></div><div class="constraint-item"><span>Arrangement</span><strong>Fitted for fill rate</strong></div><div class="constraint-item"><span>Pallet mixing</span><strong>Not allowed</strong></div><div class="constraint-item"><span>Vertical pallet stacking</span><strong>Controlled per part</strong></div>'+
+  byId('constraintGrid').innerHTML='<div class="constraint-item"><span>Demand mode</span><strong>Exact quantities</strong></div><div class="constraint-item"><span>Optimization</span><strong>Maximum fill rate</strong></div><div class="constraint-item"><span>Pallet mixing</span><strong>Not allowed</strong></div><div class="constraint-item"><span>Vertical pallet stacking</span><strong>Controlled per part</strong></div>'+
     M.parts.map(function(p){return '<div class="constraint-item"><span>'+safeText(p.name)+' pallet</span><strong>'+safeText(p.pallet.label)+' · '+p.pallet.L+'″ × '+p.pallet.W+'″ × '+p.pallet.H+'″</strong></div>';}).join('');
   var warnings=[];
   if(M.parts.length<2) warnings.push('Add at least two valid part types for the multiple-parts mode.');
@@ -2404,7 +2404,7 @@ function updateMultiResults(M,total,visible){
   });
   if(knownWeightKg>MAX_PAYLOAD_KG) warnings.push('Weight limit exceeded: at least '+formatKg(knownWeightKg)+' loaded vs '+MAX_PAYLOAD_KG.toLocaleString()+' kg maximum.');
   var warn=byId('warnDims');if(warnings.length){warn.innerHTML=warningList(warnings);warn.style.display='block';}else{warn.innerHTML='';warn.style.display='none';}
-  byId('infoGrid').innerHTML='<div class="info-block"><dt>Container</dt><dd>'+C.name+'</dd></div><div class="info-block"><dt>Mode</dt><dd>Multiple parts</dd></div><div class="info-block"><dt>Arrangement</dt><dd>Fitted for volume fill</dd></div><div class="info-block"><dt>Maximum payload</dt><dd>'+MAX_PAYLOAD_KG.toLocaleString()+' kg</dd></div><div class="info-block"><dt>Selected pallets</dt><dd>'+total+' / '+M.totalPallets+'</dd></div><div class="info-block"><dt>Total boxes</dt><dd>'+totalBoxes+'</dd></div>'+
+  byId('infoGrid').innerHTML='<div class="info-block"><dt>Container</dt><dd>'+C.name+'</dd></div><div class="info-block"><dt>Mode</dt><dd>Multiple parts</dd></div><div class="info-block"><dt>Optimization</dt><dd>Volume fill rate</dd></div><div class="info-block"><dt>Maximum payload</dt><dd>'+MAX_PAYLOAD_KG.toLocaleString()+' kg</dd></div><div class="info-block"><dt>Selected pallets</dt><dd>'+total+' / '+M.totalPallets+'</dd></div><div class="info-block"><dt>Total boxes</dt><dd>'+totalBoxes+'</dd></div>'+
     M.parts.map(function(p){var requested=p.basis==='parts'?Math.ceil(p.target):Math.ceil(p.target)*p.partsPerBox;return '<div class="info-block"><dt>'+safeText(p.name)+'</dt><dd>'+(totals.parts[p.index]||0)+' / '+requested+' parts · '+(totals.boxes[p.index]||0)+' boxes · '+safeText(p.pallet.label)+(p.partWeight>0?' · '+p.partWeight+' '+p.weightUnit+'/part':'')+'</dd></div>';}).join('');
 }
 
