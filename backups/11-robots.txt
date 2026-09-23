@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+
+# Replace the host below with the deployed domain, then redeploy.
+# Until it is a real URL, search engines simply ignore this line.
+Sitemap: https://REPLACE-WITH-YOUR-DOMAIN/sitemap.xml
