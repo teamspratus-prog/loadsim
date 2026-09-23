@@ -4,11 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Privacy — what this site stores</title>
-<meta name="description" content="The simulator runs entirely in your browser. No account, no cookies. This page names the four localStorage keys it writes and the two external requests the pages make.">
+<meta name="description" content="The simulator runs entirely in your browser. No account, no cookies, no analytics. This page lists the four localStorage keys it writes and the one external request it makes.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="CargoLoadStudio">
 <meta property="og:title" content="Privacy — what this site stores">
-<meta property="og:description" content="No account, no cookies. The four browser storage keys and the two external requests, named.">
+<meta property="og:description" content="No account, no cookies, no analytics. The four browser storage keys and the one external request, named.">
 <link rel="canonical" href="https://loadsim.vercel.app/privacy.html">
 <meta property="og:url" content="https://loadsim.vercel.app/privacy.html">
 <!-- TODO: og:image once a share card exists. -->
@@ -19,7 +19,6 @@
 <link rel="stylesheet" href="assets/base.css">
 <link rel="stylesheet" href="assets/site.css">
 <script src="assets/site.js"></script>
-<script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
 
@@ -63,7 +62,7 @@
   <div class="shell page-head">
     <span class="label">Privacy</span>
     <h1 class="display">What this site stores</h1>
-    <p class="lead">The simulator is a set of static files that run in your browser. There is no account, no database and nowhere for your load data to go. This page names everything it writes and the two requests it makes off your machine.</p>
+    <p class="lead">The simulator is a set of static files that run in your browser. There is no account, no database and nowhere for your load data to go. This page names everything it writes and the one request it makes off your machine.</p>
   </div>
 
   <!-- ── Short version ──────────────────────────────────────────────────── -->
@@ -77,8 +76,8 @@
 <ul class="tick-list" style="max-width:66ch">
         <li>No account, no email address, no sign-in</li>
         <li>No cookies. The site sets none, and reads none</li>
-        <li>Page views are counted without cookies, without an identifier kept in your browser, and without advertising</li>
-        <li>Your dimensions, quantities and saved scenarios are never transmitted — the simulator’s own code contains no network calls at all</li>
+        <li>No analytics, no tracking pixels, no third-party scripts</li>
+        <li>Your dimensions, quantities and saved scenarios are never transmitted — the code contains no network calls at all</li>
       </ul>
       </div>
     </div>
@@ -130,13 +129,12 @@
         <span class="label">Off your machine</span>
       </div>
       <div class="sect-main">
-        <h2 class="head">Two external requests</h2>
+        <h2 class="head">One external request</h2>
 <div class="notice">
         <div class="hazard-rule"></div>
         <div class="notice-body">
-          <p><b>Google Fonts.</b> The pages load two typefaces — the stylesheet from <b>fonts.googleapis.com</b> and the font files from <b>fonts.gstatic.com</b>. Your browser makes those requests directly, which means your IP address, user agent and the referring page reach Google, governed by their privacy policy rather than this one. Nothing about your load is included.</p>
-          <p style="margin-top:12px"><b>Vercel Web Analytics.</b> A small script counts page views, so we can see which pages are actually used. It records the page you opened, the page you arrived from, and coarse device and country information. It sets no cookie and keeps no identifier in your browser, and nothing about your load — dimensions, quantities or saved scenarios — is included. Vercel handles it under their own privacy terms.</p>
-          <p style="margin-top:12px">Those are the only two requests the site makes to anyone. The simulator itself makes none: its code contains no network calls at all, which is why your load data has nowhere to go. If you would rather the fonts were not fetched either, they can be self-hosted alongside the other files and the stack falls back to a real system face without them.</p>
+          <p>The pages load two typefaces from Google Fonts — the stylesheet from <b>fonts.googleapis.com</b> and the font files from <b>fonts.gstatic.com</b>. Your browser makes those requests directly, which means your IP address, user agent and the referring page reach Google, governed by their privacy policy rather than this one. Nothing about your load is included.</p>
+          <p style="margin-top:12px">It is the only request the site makes to anyone. If you would rather it made none, the fonts can be self-hosted alongside the other files and the stack falls back to a real system face without them.</p>
         </div>
       </div>
       <div class="prose" style="margin-top:26px">

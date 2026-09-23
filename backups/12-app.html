@@ -34,16 +34,6 @@
 })();
 </script>
 <script src="assets/site.js"></script>
-<script>
-/* Not in the hero iframe: an embedded view is not a visit, and counting it
-   would double-count every homepage visitor. */
-(function(){
-  if(/(^|[?&])embed=1(&|$)/.test(location.search)) return;
-  var s = document.createElement('script');
-  s.defer = true; s.src = '/_vercel/insights/script.js';
-  document.head.appendChild(s);
-})();
-</script>
 </head>
 <body>
 
