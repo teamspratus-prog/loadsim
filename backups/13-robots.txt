@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://loadsim.vercel.app/sitemap.xml

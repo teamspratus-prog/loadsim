@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://loadsim.vercel.app/sitemap.xml
+Sitemap: https://cargoloadstudio.com/sitemap.xml
