@@ -31,7 +31,7 @@
   --band-ink: #E8EDF1;
   --band-muted: rgba(232,237,241,.82);
   --band-rule: rgba(255,255,255,.17);
-  --logo-top: #0A7C86; --logo-side: #096670; --logo-end: #074E54;
+  --logo-top: #0A7C86; --logo-side: #09666E; --logo-end: #074E54;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -112,32 +112,25 @@ h1.display { font-size: clamp(42px, 7.4vw, 96px); }
   max-width: 1280px; margin: 0 auto; padding: 9px 22px;
   display: flex; align-items: center; gap: 12px 22px; flex-wrap: wrap;
 }
-.wordmark { display: inline-flex; align-items: center; gap: 11px; text-decoration: none; color: var(--ink); margin-right: auto; min-width: 0; }
-/* Mark supplied as artwork (website-logo-snippet): paths and coordinates are
-   verbatim, with the three fills, the amber and the edge colour swapped for
-   theme tokens. The edges are split either side of the load block so the back
-   corner sits behind it and the near corner in front. */
+.wordmark { display: inline-flex; align-items: center; gap: 5px; text-decoration: none; color: var(--ink); margin-right: auto; min-width: 0; }
+/* Mark from "Concept 2 — Isometric load": a container wireframe drawn over the
+   loaded half of it, and the free deck outlined in amber dashes on the roof
+   plane. Not square, so height is left to follow the viewBox. */
 .logo { height: auto; color: var(--ink); flex: 0 0 auto; }
-.wordmark .logo { width: 34px; }
-.brand-mark.logo { width: 30px; height: auto; }
+.wordmark .logo { width: 33px; }
+.brand-mark.logo { width: 46px; height: auto; }
 /* app.css shrinks .brand-mark on phones, but .brand-mark.logo outranks it. */
-@media (max-width: 640px) { .brand-mark.logo { width: 24px; } }
-/* Same 34:27:11 lockup, stepped down so the strip is not half the screen. */
-@media (max-width: 640px) {
-  .wordmark { gap: 9px; }
-  .wordmark .logo { width: 27px; }
-  .wordmark .wm { font-size: 21px; }
-}
+@media (max-width: 640px) { .brand-mark.logo { width: 35px; } }
 /* The concept's own rule: under 24px the dashes turn to mush, so they drop
    out and the outline carries the shape on its own. */
 .logo-min .logo, .logo.logo-min { width: 20px; }
 .logo-min .logo .logo-empty, .logo.logo-min .logo-empty { display: none; }
-.logo-min .logo .logo-shell, .logo.logo-min .logo-shell { stroke-width: 29; }
+.logo-min .logo .logo-shell, .logo.logo-min .logo-shell { stroke-width: 9; }
 .wordmark .wm {
-  font-family: var(--f-cond); font-weight: 700; font-size: 27px; line-height: 1;
+  font-family: var(--f-cond); font-weight: 700; font-size: 17px;
   letter-spacing: -.005em; white-space: nowrap; color: var(--ink);
 }
-.wordmark .wm b, .brand-title h1 b { color: var(--accent); font-weight: 500; }
+.wordmark .wm b, .brand-title h1 b { color: var(--accent); font-weight: inherit; }
 .site-nav { display: flex; align-items: center; gap: 2px; flex-wrap: wrap; }
 .site-nav a, .strip-btn {
   font: 600 12.5px var(--f-cond); text-transform: uppercase; letter-spacing: .12em;
