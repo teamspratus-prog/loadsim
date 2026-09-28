@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Combien de palettes entrent dans une remorque ou un conteneur ? — CargoLoadStudio</title>
+<meta name="description" content="Les emplacements au sol pour six formats de palettes dans neuf unités de transport, l'arithmétique derrière chaque chiffre, un exemple détaillé en remorque de 53', et les cinq raisons pour lesquelles vous en chargerez moins.">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="fr_CA">
+<meta property="og:locale:alternate" content="en">
+<meta property="og:site_name" content="CargoLoadStudio">
+<meta property="og:title" content="Combien de palettes entrent dans une remorque ou un conteneur ?">
+<meta property="og:description" content="La grille complète des emplacements au sol, l'arithmétique derrière, et pourquoi le nombre réel est plus bas.">
+<link rel="canonical" href="https://cargoloadstudio.com/fr/guide.html">
+<meta property="og:url" content="https://cargoloadstudio.com/fr/guide.html">
+<link rel="alternate" hreflang="en" href="https://cargoloadstudio.com/guide.html">
+<link rel="alternate" hreflang="fr" href="https://cargoloadstudio.com/fr/guide.html">
+<link rel="alternate" hreflang="x-default" href="https://cargoloadstudio.com/guide.html">
+<!-- TODO: og:image once a share card exists. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/tokens.css">
+<link rel="stylesheet" href="../assets/base.css">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/site.js"></script>
+<script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body>
+
+<div class="site-strip">
+  <div class="site-strip-inner">
+    <a class="wordmark" href="index.html">
+      <svg class="logo" viewBox="0 0 512 512" aria-hidden="true">
+  <g class="logo-shell" fill="none" stroke="currentColor" stroke-width="22.5" stroke-linecap="round">
+    <path d="M167.8 210.8 L481.3 391.7"/>
+    <path d="M167.8 210.8 L30.7 289.9"/>
+    <path d="M167.8 41.1 L481.3 222.1"/>
+    <path d="M30.7 120.3 L167.8 41.1"/>
+    <path d="M167.8 210.8 L167.8 41.1"/>
+  </g>
+  <g class="logo-load" stroke="none">
+    <polygon points="30.7,289.9 177.6,374.8 177.6,244.7 30.7,159.9" fill="var(--logo-side)"/>
+    <polygon points="314.8,295.6 177.6,374.8 177.6,244.7 314.8,165.5" fill="var(--logo-end)"/>
+    <polygon points="167.8,80.7 314.8,165.5 177.6,244.7 30.7,159.9" fill="var(--logo-top)"/>
+  </g>
+  <g class="logo-shell" fill="none" stroke="currentColor" stroke-width="22.5" stroke-linecap="round">
+    <path d="M481.3 391.7 L344.2 470.9"/>
+    <path d="M30.7 289.9 L344.2 470.9"/>
+    <path d="M481.3 222.1 L344.2 301.2"/>
+    <path d="M344.2 301.2 L30.7 120.3"/>
+    <path d="M481.3 391.7 L481.3 222.1"/>
+    <path d="M344.2 470.9 L344.2 301.2"/>
+    <path d="M30.7 289.9 L30.7 120.3"/>
+  </g>
+  <polygon class="logo-empty" points="314.8,125.9 481.3,222.1 344.2,301.2 177.6,205.1" fill="none" stroke="var(--amber)" stroke-width="13.8" stroke-dasharray="16.7 26.1" stroke-linecap="round"/>
+</svg>
+      <span class="wm">CargoLoad<b>Studio</b></span>
+    </a>
+    <nav class="site-nav" aria-label="Site">
+      <a href="index.html">Aperçu</a>
+      <a href="../app.html">Simulateur</a>
+      <a href="guide.html" aria-current="page">Guide</a>
+      <a href="tarifs.html">Tarifs</a>
+    </nav>
+    <a class="lang-switch" href="https://cargoloadstudio.com/guide.html" hreflang="en" lang="en">English</a>
+    <button class="strip-btn" type="button" id="siteTheme" aria-label="Basculer en mode sombre"><span id="siteThemeText">Sombre</span></button>
+  </div>
+</div>
+<main>
+
+  <div class="shell page-head">
+    <span class="label">Guide</span>
+    <h1 class="display">Combien de palettes entrent&nbsp;?</h1>
+    <p class="lead">Les emplacements au sol pour six formats de palettes dans neuf unités de transport, l'arithmétique derrière chaque chiffre, et les raisons pour lesquelles le nombre que vous chargez vraiment est souvent plus bas.</p>
+  </div>
+
+  <!-- ── La règle ───────────────────────────────────────────────────────── -->
+  <section class="sect">
+    <div class="shell sect-grid">
+      <div class="sect-aside">
+        <span class="label">L'arithmétique</span>
+      </div>
+      <div class="sect-main">
+        <h2 class="head">Deux divisions et une multiplication</h2>
+<div class="prose">
+        <p>Les emplacements au sol viennent de la largeur et de la longueur intérieures confrontées à l'empreinte de la palette. Rien d'autre n'entre en jeu — ni les boîtes, ni le poids, ni la hauteur&nbsp;:</p>
+        <code class="formula">emplacements = plancher(largeur intérieure ÷ largeur palette)
+          × plancher(longueur intérieure ÷ longueur palette)</code>
+        <p>Les deux divisions arrondissent <strong>vers le bas</strong>, et c'est là que se loge l'essentiel de la perte. Une remorque de 53' fait 99 po de large à l'intérieur&nbsp;; deux palettes de 45 po en prennent 90 et les 9 po qui restent n'accueillent rien. La même remorque fait 630 po de long, soit 13,1 palettes à 48 po — donc 13 rangées, et 0,1 rangée perdue.</p>
+        <p>La hauteur est un calcul distinct, et il porte sur la palette chargée plutôt que sur la palette nue&nbsp;:</p>
+        <code class="formula">hauteur palette chargée = hauteur palette + (couches × hauteur boîte)
+niveaux = plancher(hauteur intérieure ÷ hauteur palette chargée)</code>
+        <p>Le total de palettes est alors <strong>emplacements × niveaux</strong>. Le simulateur plafonne les couches et les niveaux à ce que la hauteur permet, et vous dit quand il a dû le faire.</p>
+      </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Grille ─────────────────────────────────────────────────────────── -->
+  <section class="sect" id="emplacements">
+    <div class="shell sect-grid">
+      <div class="sect-aside">
+        <span class="label">Emplacements au sol</span>
+      </div>
+      <div class="sect-main">
+        <h2 class="head">Chaque palette contre chaque unité</h2>
+        <p>Un seul niveau. Les formats de palettes sont en pouces, le côté qui court dans le sens de l'unité en premier&nbsp;: <b>48 × 40</b> et <b>40 × 48</b> sont donc la même palette tournée de quatre-vingt-dix degrés.</p>
+<div class="table-scroll">
+        <table class="units matrix">
+          <thead>
+            <tr>
+              <th scope="col">Unité de transport</th>
+              <th scope="col" class="num">48 × 45</th>
+              <th scope="col" class="num">48 × 40</th>
+              <th scope="col" class="num">40 × 48</th>
+              <th scope="col" class="num">47,2 × 31,5</th>
+              <th scope="col" class="num">31,5 × 47,2</th>
+              <th scope="col" class="num">24 × 45</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="u-name">Remorque 48'<span class="u-kind">Remorque</span></td><td class="num">24</td><td class="num">24</td><td class="num">28</td><td class="num">36</td><td class="num">36</td><td class="num">48</td></tr>
+            <tr><td class="u-name">Remorque 53'<span class="u-kind">Remorque</span></td><td class="num">26</td><td class="num">26</td><td class="num">30</td><td class="num">39</td><td class="num">40</td><td class="num">52</td></tr>
+            <tr><td class="u-name">Conteneur 20' STD<span class="u-kind">Conteneur maritime</span></td><td class="num">8</td><td class="num">8</td><td class="num">5</td><td class="num">8</td><td class="num">7</td><td class="num">18</td></tr>
+            <tr><td class="u-name">Conteneur 40' STD<span class="u-kind">Conteneur maritime</span></td><td class="num">18</td><td class="num">18</td><td class="num">11</td><td class="num">20</td><td class="num">15</td><td class="num">38</td></tr>
+            <tr><td class="u-name">Conteneur 40' HC<span class="u-kind">Conteneur maritime</span></td><td class="num">18</td><td class="num">18</td><td class="num">11</td><td class="num">20</td><td class="num">15</td><td class="num">38</td></tr>
+            <tr><td class="u-name">Conteneur 45' HC<span class="u-kind">Conteneur maritime</span></td><td class="num">22</td><td class="num">22</td><td class="num">13</td><td class="num">22</td><td class="num">16</td><td class="num">44</td></tr>
+            <tr><td class="u-name">Plateforme 48'<span class="u-kind">Plateforme</span></td><td class="num">22</td><td class="num">22</td><td class="num">28</td><td class="num">36</td><td class="num">36</td><td class="num">46</td></tr>
+            <tr><td class="u-name">Plateforme 53'<span class="u-kind">Plateforme</span></td><td class="num">26</td><td class="num">26</td><td class="num">30</td><td class="num">39</td><td class="num">40</td><td class="num">52</td></tr>
+            <tr><td class="u-name">Conteneur intermodal 53'<span class="u-kind">Intermodal</span></td><td class="num">26</td><td class="num">26</td><td class="num">30</td><td class="num">39</td><td class="num">40</td><td class="num">52</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="table-foot"><b>48 × 45</b> la palette pleine par défaut du simulateur · <b>48 × 40</b> GMA, longerons dans le sens de l'unité · <b>40 × 48</b> la même palette GMA tournée · <b>47,2 × 31,5</b> Euro EUR1, 1200 × 800 mm · <b>31,5 × 47,2</b> la même palette Euro tournée · <b>24 × 45</b> demi-palette. Les dimensions intérieures sont celles intégrées au simulateur&nbsp;; vérifiez-les contre votre propre équipement.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Exemple ────────────────────────────────────────────────────────── -->
+  <section class="sect">
+    <div class="shell sect-grid">
+      <div class="sect-aside">
+        <span class="label">Exemple détaillé</span>
+      </div>
+      <div class="sect-main">
+        <h2 class="head">Des palettes GMA dans une remorque de 53'</h2>
+        <p>La version la plus demandée de la question, déroulée d'un bout à l'autre. Intérieur 630 × 99 × 110 po&nbsp;; palette 48 × 40 × 5 po&nbsp;; boîte 45 × 24 × 18 po.</p>
+<div class="prose">
+        <ol class="steps">
+          <li>99 po de largeur ÷ 40 po de largeur de palette = 2,47, donc <strong>2 palettes de front</strong>. Les 19 po qui restent ne suffisent pas pour une troisième.</li>
+          <li>630 po de longueur ÷ 48 po de longueur de palette = 13,1, donc <strong>13 rangées de profondeur</strong>.</li>
+          <li>2 × 13 = <strong>26 emplacements au sol</strong>.</li>
+          <li>Tournez chaque palette pour que le côté de 40 po coure dans le sens de la remorque&nbsp;: 99 ÷ 48 = 2,06, toujours 2 de front, mais 630 ÷ 40 = 15,75, donc 15 de profondeur. Cela fait <strong>30 emplacements</strong> — quatre de plus, sans rien d'autre que l'orientation.</li>
+          <li>Quatre couches de boîtes sur une palette font 5 + (4 × 18) = <strong>77 po</strong>. Le plafond est à 110 po, donc 110 ÷ 77 = 1,4&nbsp;: <strong>un seul niveau</strong>. Total 26, ou 30 en tournant.</li>
+          <li>Deux niveaux exigent une palette chargée d'au plus 55 po. Deux couches de boîtes donnent 5 + 36 = 41 po, donc deux niveaux font 82 po et passent sous le plafond&nbsp;: <strong>52 palettes, ou 60 en tournant</strong> — avec les mêmes huit boîtes par emplacement.</li>
+        </ol>
+        <p>L'étape 6 mérite qu'on s'y arrête. Répartir les mêmes boîtes sur deux palettes plus courtes double le nombre de palettes sans charger une seule boîte de plus, et coûte 5 po de hauteur pour le second plancher.</p>
+      </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Réserves ───────────────────────────────────────────────────────── -->
+  <section class="sect sect--band band" id="reserves">
+    <div class="shell sect-grid">
+      <div class="sect-aside">
+        <span class="label">Retour au réel</span>
+      </div>
+      <div class="sect-main">
+        <h2 class="head">Pourquoi vous en chargerez moins</h2>
+<p>Tous les chiffres ci-dessus sont de la géométrie sans rien dans le chemin. Cinq choses en reprennent régulièrement une partie&nbsp;:</p>
+        <div class="hazard-rule" style="margin:26px 0 4px"></div>
+          <ul class="tick-list warn">
+            <li><strong>Le poids arrive avant le volume.</strong> Vingt-six palettes à 800 kg chacune font 20 800 kg, déjà au-delà des 20 200 kg que le simulateur surveille. Une marchandise dense n'atteint jamais le nombre d'emplacements.</li>
+            <li><strong>Les orientations mixtes ne sont pas modélisées.</strong> Les colonnes tournées ci-dessus font pivoter toutes les palettes de la même façon. Les dispositions en moulin à vent ou partiellement tournées peuvent battre les deux colonnes, et le mode pièce unique ne les tente pas.</li>
+            <li><strong>L'arrimage prend de la longueur.</strong> Barres de retenue, coussins gonflables, matériel de calage et un espace aux portes sortent tous des mêmes 630 po.</li>
+            <li><strong>La porte est plus étroite que la caisse.</strong> La largeur intérieure n'est pas la largeur d'ouverture, et une palette qui entre dans la remorque doit encore passer par l'ouverture.</li>
+            <li><strong>Le volume utile est déjà escompté.</strong> Un 40' HC fait 2 694 pi³ en théorie et le simulateur en retient 2 529 — le pourcentage de remplissage se mesure sur le plus petit des deux.</li>
+          </ul>
+      <p style="margin-top:30px"><a class="btn-solid" href="../app.html">Faites vos propres chiffres</a></p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<div class="site-foot-wrap">
+<footer class="site-footer">
+  <span class="footer-credit">Créé par Spratus · Québec, Canada · <a href="mailto:team.spratus@gmail.com">team.spratus@gmail.com</a></span>
+  <div class="footer-links">
+    <a href="index.html">Aperçu</a>
+    <a href="../app.html">Simulateur</a>
+    <a href="guide.html">Guide</a>
+    <a href="tarifs.html">Tarifs</a>
+    <a href="conditions.html">Conditions</a>
+    <a href="confidentialite.html">Confidentialité</a>
+  </div>
+</footer>
+</div>
+
+</body>
+</html>

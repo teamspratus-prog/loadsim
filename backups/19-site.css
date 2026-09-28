@@ -147,15 +147,6 @@ h1.display { font-size: clamp(42px, 7.4vw, 96px); }
 .site-nav a:hover, .strip-btn:hover { color: var(--ink); }
 .site-nav a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--ink); }
 .strip-btn { color: var(--ink-2); }
-/* Language switch. Same weight as a nav item, but underlined so it reads as a
-   destination rather than another section of this site. Its own lang/hreflang
-   sit on the element, so a screen reader announces it in the target language. */
-.lang-switch {
-  font: 600 12.5px var(--f-cond); text-transform: uppercase; letter-spacing: .12em;
-  color: var(--ink-2); text-decoration: none; padding: 7px 9px;
-  border-bottom: 2px solid var(--rule-strong);
-}
-.lang-switch:hover { color: var(--accent); border-bottom-color: var(--accent); }
 
 /* ── Sections: one rule, three densities, one inversion ── */
 .sect { padding: 68px 0; border-top: 1px solid var(--rule); }
@@ -402,7 +393,7 @@ h1.display { font-size: clamp(42px, 7.4vw, 96px); }
 .embed #canvasViewport { height: calc(100vh - 212px); min-height: 210px; }
 
 @media print {
-  .site-strip, .demo, .hero-actions, .footer-links, .lang-switch { display: none !important; }
+  .site-strip, .demo, .hero-actions, .footer-links { display: none !important; }
   .sect--band { background: #fff !important; color: #000 !important; }
 }
 

@@ -11,25 +11,12 @@
     return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
   }
 
-  /* The button's text is written here rather than left in the markup, so it
-     stays right after a toggle. That means it has to know the page language:
-     the French pages carry lang="fr" on <html>. */
-  var STRINGS = {
-    en: { toLight:'Switch to light mode', toDark:'Switch to dark mode', light:'Light', dark:'Dark' },
-    fr: { toLight:'Basculer en mode clair', toDark:'Basculer en mode sombre', light:'Clair', dark:'Sombre' }
-  };
-  function words(){
-    var lang = (document.documentElement.getAttribute('lang') || 'en').slice(0,2).toLowerCase();
-    return STRINGS[lang] || STRINGS.en;
-  }
-
   function apply(theme){
     document.documentElement.setAttribute('data-theme', theme);
-    var t = words();
     var btn = document.getElementById('siteTheme');
     var label = document.getElementById('siteThemeText');
-    if(btn) btn.setAttribute('aria-label', theme==='dark' ? t.toLight : t.toDark);
-    if(label) label.textContent = theme==='dark' ? t.light : t.dark;
+    if(btn) btn.setAttribute('aria-label', theme==='dark' ? 'Switch to light mode' : 'Switch to dark mode');
+    if(label) label.textContent = theme==='dark' ? 'Light' : 'Dark';
   }
 
   apply(get(KEY) || (systemPrefersDark() ? 'dark' : 'light'));

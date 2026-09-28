@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Confidentialité — ce que ce site conserve</title>
+<meta name="description" content="Le simulateur s'exécute entièrement dans votre navigateur. Aucun compte, aucun témoin. Cette page nomme les quatre clés de stockage local qu'il écrit et les deux requêtes externes que font les pages.">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="fr_CA">
+<meta property="og:locale:alternate" content="en">
+<meta property="og:site_name" content="CargoLoadStudio">
+<meta property="og:title" content="Confidentialité — ce que ce site conserve">
+<meta property="og:description" content="Aucun compte, aucun témoin. Les quatre clés de stockage du navigateur et les deux requêtes externes, nommées.">
+<link rel="canonical" href="https://cargoloadstudio.com/fr/confidentialite.html">
+<meta property="og:url" content="https://cargoloadstudio.com/fr/confidentialite.html">
+<link rel="alternate" hreflang="en" href="https://cargoloadstudio.com/privacy.html">
+<link rel="alternate" hreflang="fr" href="https://cargoloadstudio.com/fr/confidentialite.html">
+<link rel="alternate" hreflang="x-default" href="https://cargoloadstudio.com/privacy.html">
+<!-- TODO: og:image once a share card exists. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/tokens.css">
+<link rel="stylesheet" href="../assets/base.css">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/site.js"></script>
+<script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body>
+
+<div class="site-strip">
+  <div class="site-strip-inner">
+    <a class="wordmark" href="index.html">
+      <svg class="logo" viewBox="0 0 512 512" aria-hidden="true">
+  <g class="logo-shell" fill="none" stroke="currentColor" stroke-width="22.5" stroke-linecap="round">
+    <path d="M167.8 210.8 L481.3 391.7"/>
+    <path d="M167.8 210.8 L30.7 289.9"/>
+    <path d="M167.8 41.1 L481.3 222.1"/>
+    <path d="M30.7 120.3 L167.8 41.1"/>
+    <path d="M167.8 210.8 L167.8 41.1"/>
+  </g>
+  <g class="logo-load" stroke="none">
+    <polygon points="30.7,289.9 177.6,374.8 177.6,244.7 30.7,159.9" fill="var(--logo-side)"/>
+    <polygon points="314.8,295.6 177.6,374.8 177.6,244.7 314.8,165.5" fill="var(--logo-end)"/>
+    <polygon points="167.8,80.7 314.8,165.5 177.6,244.7 30.7,159.9" fill="var(--logo-top)"/>
+  </g>
+  <g class="logo-shell" fill="none" stroke="currentColor" stroke-width="22.5" stroke-linecap="round">
+    <path d="M481.3 391.7 L344.2 470.9"/>
+    <path d="M30.7 289.9 L344.2 470.9"/>
+    <path d="M481.3 222.1 L344.2 301.2"/>
+    <path d="M344.2 301.2 L30.7 120.3"/>
+    <path d="M481.3 391.7 L481.3 222.1"/>
+    <path d="M344.2 470.9 L344.2 301.2"/>
+    <path d="M30.7 289.9 L30.7 120.3"/>
+  </g>
+  <polygon class="logo-empty" points="314.8,125.9 481.3,222.1 344.2,301.2 177.6,205.1" fill="none" stroke="var(--amber)" stroke-width="13.8" stroke-dasharray="16.7 26.1" stroke-linecap="round"/>
+</svg>
+      <span class="wm">CargoLoad<b>Studio</b></span>
+    </a>
+    <nav class="site-nav" aria-label="Site">
+      <a href="index.html">Aperçu</a>
+      <a href="../app.html">Simulateur</a>
+      <a href="guide.html">Guide</a>
+      <a href="tarifs.html">Tarifs</a>
+    </nav>
+    <a class="lang-switch" href="https://cargoloadstudio.com/privacy.html" hreflang="en" lang="en">English</a>
+    <button class="strip-btn" type="button" id="siteTheme" aria-label="Basculer en mode sombre"><span id="siteThemeText">Sombre</span></button>
+  </div>
+</div>
+<main>
+
+  <div class="shell page-head">
+    <span class="label">Confidentialité</span>
+    <h1 class="display">Ce que ce site conserve</h1>
+    <p class="lead">Le simulateur est un ensemble de fichiers statiques qui s'exécutent dans votre navigateur. Il n'y a ni compte, ni base de données, ni endroit où vos données de chargement pourraient aller. Cette page nomme tout ce qu'il écrit et les deux requêtes qu'il fait sortir de votre machine.</p>
+  </div>
+
+  <!-- ── Version courte ─────────────────────────────────────────────────── -->
+  <section class="sect">
+    <div class="shell sect-grid">
+      <div class="sect-aside">
+        <span class="label">La version courte</span>
+      </div>
+      <div class="sect-main">
+        <h2 class="head">Tout tourne sur votre machine</h2>
+<ul class="tick-list" style="max-width:66ch">
+        <li>Aucun compte, aucune adresse courriel, aucune connexion</li>
+        <li>Aucun témoin. Le site n'en dépose aucun et n'en lit aucun</li>
+        <li>Les pages vues sont comptées sans témoin, sans identifiant gardé dans votre navigateur et sans publicité</li>
+        <li>Vos dimensions, vos quantités et vos scénarios enregistrés ne sont jamais transmis — le code du simulateur ne contient aucun appel réseau</li>
+      </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Stockage ───────────────────────────────────────────────────────── -->
+  <section class="sect">
+    <div class="shell sect-grid">
+      <div class="sect-aside">
+        <span class="label">Stockage du navigateur</span>
+      </div>
+      <div class="sect-main">
+        <h2 class="head">Quatre clés, sur votre appareil</h2>
+        <p>Le simulateur écrit ces clés dans le <b>localStorage</b> de votre navigateur pour que votre configuration survive à un rechargement. Elles restent sur l'appareil qui les a écrites et ne sont lisibles que par ce site.</p>
+<div style="max-width:76ch">
+        <div class="kv-row">
+          <code>clStateV1</code>
+          <p>La configuration en cours&nbsp;: l'unité de transport et ses dimensions intérieures, les dimensions de palette et de boîte, les couches, les niveaux, les pièces par boîte, le poids par pièce, les panneaux ouverts, le niveau de zoom et l'angle de vue.</p>
+        </div>
+        <div class="kv-row">
+          <code>clScenariosV1</code>
+          <p>Les scénarios que vous avez enregistrés par nom, chacun contenant une copie complète de la configuration ci-dessus et la date d'enregistrement.</p>
+        </div>
+        <div class="kv-row">
+          <code>clShowEmptyV1</code>
+          <p>Si la surimpression de l'espace vide est activée. Un seul caractère.</p>
+        </div>
+        <div class="kv-row">
+          <code>clThemeV1</code>
+          <p>Votre choix clair ou sombre, partagé par toutes les pages du site.</p>
+        </div>
+      </div>
+      <div class="prose" style="margin-top:26px">
+        <h3>Si le stockage n'est pas disponible</h3>
+        <p>Chaque lecture et chaque écriture est protégée pour qu'une fenêtre privée, des données de site bloquées ou un disque plein ne puissent pas casser l'outil. Il fonctionne normalement et oublie simplement votre configuration d'une visite à l'autre.</p>
+        <h3>Pour tout retirer</h3>
+        <p><strong>Réinitialiser</strong> dans le panneau Cargo efface la configuration en cours mais conserve délibérément vos scénarios enregistrés. Pour tout supprimer, effacez les données de site de ce domaine dans les réglages de votre navigateur — il n'existe aucune copie côté serveur dont il faudrait demander la suppression.</p>
+        <h3>Codes de partage</h3>
+        <p>Un code de partage est votre configuration et vos scénarios encodés en texte, dans votre propre navigateur. Il n'est téléversé nulle part. Partout où vous le collez, la destination le voit — traitez donc un code comme les dimensions et les quantités qu'il contient.</p>
+      </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Requêtes externes ──────────────────────────────────────────────── -->
+  <section class="sect">
+    <div class="shell sect-grid">
+      <div class="sect-aside">
+        <span class="label">Hors de votre machine</span>
+      </div>
+      <div class="sect-main">
+        <h2 class="head">Deux requêtes externes</h2>
+<div class="notice">
+        <div class="hazard-rule"></div>
+        <div class="notice-body">
+          <p><b>Google Fonts.</b> Les pages chargent deux polices — la feuille de style depuis <b>fonts.googleapis.com</b> et les fichiers de police depuis <b>fonts.gstatic.com</b>. Votre navigateur fait ces requêtes directement, ce qui veut dire que votre adresse IP, votre agent utilisateur et la page d'origine parviennent à Google, sous leur politique de confidentialité plutôt que celle-ci. Rien de votre chargement n'y est inclus.</p>
+          <p style="margin-top:12px"><b>Vercel Web Analytics.</b> Un petit script compte les pages vues, pour voir quelles pages servent vraiment. Il enregistre la page ouverte, la page d'où vous arrivez, et des informations grossières d'appareil et de pays. Il ne dépose aucun témoin et ne garde aucun identifiant dans votre navigateur, et rien de votre chargement — dimensions, quantités ou scénarios enregistrés — n'y est inclus. Vercel le traite sous ses propres conditions.</p>
+          <p style="margin-top:12px">Ce sont les deux seules requêtes que le site fait à qui que ce soit. Le simulateur lui-même n'en fait aucune&nbsp;: son code ne contient aucun appel réseau, et c'est pour cela que vos données de chargement n'ont nulle part où aller. Si vous préfériez que les polices ne soient pas non plus téléchargées, elles peuvent être hébergées avec les autres fichiers, et la pile retombe sur une vraie police système sans elles.</p>
+        </div>
+      </div>
+      <div class="prose" style="margin-top:26px">
+        <h3>Hébergement</h3>
+        <p>Les fichiers sont servis par <b>Vercel</b>, qui comme tout serveur web enregistre des journaux de requêtes ordinaires — adresse IP, horodatage, page demandée et agent utilisateur. C'est le fonctionnement normal d'un serveur, et c'est distinct de ce que fait le simulateur lui-même.</p>
+      </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Qui, et comment demander ───────────────────────────────────────── -->
+  <section class="sect">
+    <div class="shell sect-grid">
+      <div class="sect-aside">
+        <span class="label">Qui détient cela</span>
+      </div>
+      <div class="sect-main">
+        <h2 class="head">Une personne, au Québec</h2>
+        <p>CargoLoadStudio est conçu et exploité par une personne établie au <b>Québec, Canada</b>, sous le nom <b>Spratus</b>. Ce n'est pas une société enregistrée. La <i>Loi 25</i> du Québec s'applique, avec la loi fédérale canadienne (LPRPDE) derrière elle, en plus de ce qui s'applique là où vous êtes.</p>
+        <div class="kv-row" style="margin-top:22px">
+          <code>Personne responsable</code>
+          <p>La Loi 25 demande que la personne responsable de la protection des renseignements personnels soit nommée publiquement. C'est l'exploitant de ce site, en personne, joignable à <a href="mailto:team.spratus@gmail.com">team.spratus@gmail.com</a> — pour toute question sur cette page, pour demander ce qui est détenu à votre sujet, ou pour faire corriger ou supprimer quelque chose.</p>
+        </div>
+        <div class="kv-row">
+          <code>Désactiver le comptage</code>
+          <p>La seule technologie ici qui observe quoi que ce soit est le compteur de pages vues décrit plus haut. Il ne dépose aucun témoin et ne garde aucun identifiant, il n'y a donc aucun profil à désactiver — mais si vous préférez qu'il ne s'exécute pas du tout, n'importe quel bloqueur de contenu l'arrête, et le reste du site fonctionne exactement pareil sans lui. Rien d'autre sur le site ne vous identifie, ne vous localise ni ne vous suit.</p>
+        </div>
+        <div class="kv-row">
+          <code>Où cela réside</code>
+          <p>Les fichiers sont servis par Vercel, dont les serveurs sont hors du Québec&nbsp;: les journaux de requêtes ordinaires sont donc conservés hors de la province. Rien de ce que vous entrez dans le simulateur ne s'y trouve — cela ne quitte jamais votre navigateur.</p>
+        </div>
+        <div class="notice" style="margin-top:22px">
+          <div class="hazard-rule"></div>
+          <div class="notice-body">
+            <p><b>Il n'y a probablement rien à vous envoyer.</b> Aucun compte n'existe, rien de ce que vous entrez n'est transmis, et le stockage décrit plus haut se trouve sur votre propre appareil, où vous seul pouvez l'atteindre. Une demande de copie, de correction ou de suppression peut être traitée honnêtement en une ligne — et vous pouvez effectuer la suppression vous-même, immédiatement, en effaçant les données de site.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Portée ─────────────────────────────────────────────────────────── -->
+  <section class="sect">
+    <div class="shell">
+      <div class="prose">
+        <p><strong>Cette page décrit le comportement du logiciel</strong>, vérifié dans le code source plutôt qu'écrit d'après l'intention. Ce n'est pas un avis juridique et cela ne remplace pas une politique de confidentialité révisée pour les territoires où vous exercez.</p>
+        <p>Les conditions sous lesquelles l'outil est offert se trouvent sur la page <a href="conditions.html">conditions d'utilisation</a>.</p>
+        <p>Dernière mise à jour&nbsp;: 28 septembre 2026.</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<div class="site-foot-wrap">
+<footer class="site-footer">
+  <span class="footer-credit">Créé par Spratus · Québec, Canada · <a href="mailto:team.spratus@gmail.com">team.spratus@gmail.com</a></span>
+  <div class="footer-links">
+    <a href="index.html">Aperçu</a>
+    <a href="../app.html">Simulateur</a>
+    <a href="guide.html">Guide</a>
+    <a href="tarifs.html">Tarifs</a>
+    <a href="conditions.html">Conditions</a>
+    <a href="confidentialite.html">Confidentialité</a>
+  </div>
+</footer>
+</div>
+
+</body>
+</html>
